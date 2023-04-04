@@ -1,0 +1,9 @@
+
+apiTitle: dex-pairs-oracle
+splitSpec: true
+codeSamples: false
+swaggerUI: true
+travis: true
+repo: rarimo/dex-pairs-oracle
+oasVersion: 1.0.0
+
