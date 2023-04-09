@@ -1,14 +1,23 @@
 package cli
 
 import (
+	"context"
+	"fmt"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+
+	"gitlab.com/distributed_lab/logan/v3/errors"
+
 	"github.com/alecthomas/kingpin"
 	"gitlab.com/distributed_lab/kit/kv"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/service"
+	"gitlab.com/rarimo/dex-pairs-oracle/internal/service/api"
 )
 
-func Run(args []string) bool {
+func Run(args []string) {
 	log := logan.New()
 
 	defer func() {
@@ -23,24 +32,69 @@ func Run(args []string) bool {
 	app := kingpin.New("dex-pairs-oracle", "")
 
 	runCmd := app.Command("run", "run command")
-	serviceCmd := runCmd.Command("service", "run service") // you can insert custom help
+	apiCmd := runCmd.Command("api", "run api") // you can insert custom help
+
+	migrateCmd := app.Command("migrate", "migrate command")
+	migrateUpCmd := migrateCmd.Command("up", "migrate db up")
+	migrateDownCmd := migrateCmd.Command("down", "migrate db down")
 
 	// custom commands go here...
 
 	cmd, err := app.Parse(args[1:])
 	if err != nil {
-		log.WithError(err).Error("failed to parse arguments")
-		return false
+		panic(errors.Wrap(err, "failed to parse args"))
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	wg := sync.WaitGroup{}
+	run := func(f func(context.Context, config.Config)) {
+		wg.Add(1)
+
+		go func() {
+			defer wg.Done()
+			defer func() {
+				if rvr := recover(); rvr != nil {
+					logan.New().WithRecover(rvr).Error("service panicked")
+				}
+			}()
+
+			f(ctx, cfg)
+		}()
 	}
 
 	switch cmd {
-	case serviceCmd.FullCommand():
-		service.Run(cfg)
+	case apiCmd.FullCommand():
+		cfg.Log().Info("starting API")
+		run(api.Run)
 	// handle any custom commands here in the same way
+	case migrateUpCmd.FullCommand():
+		if err := MigrateUp(cfg); err != nil {
+			panic(errors.Wrap(err, "failed to migrate up"))
+		}
+	case migrateDownCmd.FullCommand():
+		if err := MigrateDown(cfg); err != nil {
+			panic(errors.Wrap(err, "failed to migrate down"))
+		}
 	default:
-		log.Errorf("unknown command %s", cmd)
-		return false
+		panic(fmt.Errorf("unknown command %s", cmd))
 	}
 
-	return true
+	gracefulStop := make(chan os.Signal, 1)
+	signal.Notify(gracefulStop, syscall.SIGTERM, syscall.SIGINT)
+
+	wgch := make(chan struct{})
+	go func() {
+		wg.Wait()
+		close(wgch)
+	}()
+
+	select {
+	case <-wgch:
+		cfg.Log().Warn("all services stopped")
+	case <-gracefulStop:
+		cfg.Log().Info("received signal to stop")
+		cancel()
+		<-wgch
+	}
 }

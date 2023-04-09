@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-GENERATOR_IMAGE=registry.gitlab.com/tokend/openapi-go-generator:69f004b58152c83f007b593cc13e94b81d7200da
+GENERATOR_IMAGE=registry.gitlab.com/tokend/openapi-go-generator:c59241b52b0e37bbbeb02a214ab5bfd07627aabc
 
 
 GENERATED="${GOPATH}/src/gitlab.com/rarimo/dex-pairs-oracle/resources"
@@ -50,7 +50,7 @@ function parseArgs {
 
 function generate {
     (cd docs && npm run build)
-    docker run -v "${OPENAPI_DIR}":/openapi -v "${GENERATED}":/generated "${GENERATOR_IMAGE}" generate -pkg "${PACKAGE_NAME}" --raw-formats-as-types
+    docker run -v "${OPENAPI_DIR}":/openapi -v "${GENERATED}":/generated "${GENERATOR_IMAGE}" generate -pkg "${PACKAGE_NAME}" --raw-formats-as-types --meta-for-lists --meta
     goimports -w ${GENERATED}
 }
 

@@ -1,12 +1,33 @@
 log:
   disable_sentry: true
+  level: debug
+
+db:
+  url: postgres://postgres:postgres@localhost:5432/rarimo_dex_oracle?sslmode=disable
 
 listener:
   addr: :8000
 
-cop:
-  disabled: true
-  endpoint: "http://..."
-  upstream: "http://..."
-  service_name: dex-pairs-oracle
-  service_port: 80
+chains:
+  chains:
+    - id: 56
+      name: "BSC"
+      rpc_url: "https://bsc-dataseed.binance.org/"
+      native_symbol: BNB
+      explorer_url: "https://bscscan.com"
+      type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
+      kind: "mainnet"
+      icon_url: "https://raw.githubusercontent.com/MetaMask/metamask-extension/develop/app/images/bnb.png"
+      swap_contract_address: "0x85718348D854CE2768e96D87a2ed6d12d619b67B"
+      swap_contract_version: "PancakeSwap"
+      tokens_info:
+        list_urls:
+          - "https://tokens.pancakeswap.finance/pancakeswap-extended.json"
+          - "https://github.com/pancakeswap/token-list/blob/main/lists/cmc.json"
+        tokens:
+          - chain_id: 97
+            address: "0x8BaBbB98678facC7342735486C851ABD7A0d17Ca"
+            name: "Ethereum Token"
+            symbol: "ETH"
+            decimals: 18
+            logo_uri: "https://raw.githubusercontent.com/MetaMask/metamask-extension/develop/app/images/eth_logo.svg"

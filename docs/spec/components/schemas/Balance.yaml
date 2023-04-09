@@ -1,0 +1,43 @@
+allOf:
+  - $ref: '#/components/schemas/ChainKey'
+  - type: object
+    required:
+      - attributes
+      - relationships
+    properties:
+      attributes:
+        type: object
+        required:
+          - amount
+        properties:
+          amount:
+            type: string
+            example: "100000000000000"
+      relationships:
+        type: object
+        required:
+          - chain
+          - owner
+          - token
+        properties:
+          chain:
+            type: object
+            description: Chain the balance is on
+            required: [data]
+            properties:
+              data:
+                $ref: '#/components/schemas/ChainKey'
+          owner:
+            type: object
+            description: User who owns the balance
+            required: [data]
+            properties:
+              data:
+                $ref: '#/components/schemas/AccountKey'
+          token:
+            type: object
+            description: Token the balance is for
+            required: [data]
+            properties:
+              data:
+                $ref: '#/components/schemas/TokenKey'

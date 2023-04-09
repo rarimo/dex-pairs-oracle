@@ -2,7 +2,7 @@
 
 ## Description
 
-&#34;Backend module that loads DEX asset pairs from several configured sources and exposes API to instant access to them at one place&#34;
+Backend module that loads DEX asset pairs from several configured sources and exposes API to instant access to them at one place
 
 ## Install
 
