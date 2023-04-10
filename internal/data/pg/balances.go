@@ -16,6 +16,20 @@ import (
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
 )
 
+func (q BalanceQ) InsertBatchCtx(ctx context.Context, balances ...data.Balance) error {
+	stmt := squirrel.Insert("public.balances").
+		Columns("account_address", "token", "chain_id",
+			"amount", "created_at", "updated_at")
+
+	for _, balance := range balances {
+		stmt = stmt.
+			Values(balance.AccountAddress, balance.Token, balance.ChainID,
+				balance.Amount, balance.CreatedAt, balance.UpdatedAt)
+	}
+
+	return q.db.ExecContext(ctx, stmt)
+}
+
 func (q BalanceQ) SelectCtx(ctx context.Context, selector data.BalancesSelector) ([]data.Balance, error) {
 	stmt := applyBalancesSelector(
 		squirrel.Select("*").From("public.balances"),

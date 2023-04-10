@@ -8,6 +8,7 @@ require (
 	github.com/ethereum/go-ethereum v1.10.26
 	github.com/go-chi/chi/v5 v5.0.7
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/rubenv/sql-migrate v1.4.0
 	github.com/spf13/cast v1.5.0
 	gitlab.com/distributed_lab/ape v1.7.1
@@ -48,6 +49,7 @@ require (
 	github.com/dgraph-io/badger/v2 v2.2007.4 // indirect
 	github.com/dgraph-io/ristretto v0.1.0 // indirect
 	github.com/dgryski/go-farm v0.0.0-20200201041132-a6ae2369ad13 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dustin/go-humanize v1.0.1-0.20200219035652-afde56e7acac // indirect
 	github.com/dvsekhvalnov/jose2go v1.5.0 // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect

@@ -24,10 +24,13 @@ func Run(ctx context.Context, cfg config.Config) {
 	r.Route("/dexoracle", func(r chi.Router) {
 		//r.Get("/tokens", handlers.ListSupportedToken)
 		r.Get("/chains", handlers.ListSupportedChain)
-		//r.Route("/balances", func(r chi.Router) {
-		//	r.Get("/", handlers.ListBalance)
-		//	r.Get("/{balance-id}", handlers.GetBalance)
-		//})
+		r.Route("/chains", func(r chi.Router) {
+			r.Get("/", handlers.ListSupportedChain)
+			r.Route("/{chain-id}", func(r chi.Router) {
+				//r.Get("/", handlers.GetChain)
+				r.Get("/{account_address}/balances", handlers.ListBalances)
+			})
+		})
 	})
 
 	ape.Serve(ctx, r, cfg, ape.ServeOpts{

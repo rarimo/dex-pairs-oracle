@@ -20,6 +20,7 @@ allOf:
             example: "ATM"
           decimals:
             type: integer
+            format: int64
             example: 2
           logo_uri:
             type: string

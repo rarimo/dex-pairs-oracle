@@ -14,7 +14,15 @@ type Storage interface {
 
 type BalanceQ interface {
 	SelectCtx(ctx context.Context, selector BalancesSelector) ([]Balance, error)
-	InsertCtx(ctx context.Context, balance *Balance) error
+	InsertBatchCtx(ctx context.Context, balances ...Balance) error
 }
 
 type GorpMigrationQ interface{}
+
+type RedisStore interface {
+	Tokens() TokensQ
+}
+
+type TokensQ interface {
+	Get(ctx context.Context, address string, chainID int64) (*Token, error)
+}

@@ -1,16 +1,19 @@
 package handlers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
+	"github.com/go-chi/chi/v5"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 	"gitlab.com/distributed_lab/kit/pgdb"
+	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/distributed_lab/urlval"
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
@@ -19,9 +22,13 @@ import (
 )
 
 type listBalancesRequest struct {
-	ChainID        *int64  `filter:"chain_id"`
-	TokenAddress   *string `filter:"token_address"`
-	AccountAddress *string `filter:"account_address"`
+	ChainID        int64
+	AccountAddress string
+
+	TokenAddress *string `filter:"token_address"`
+
+	IncludeChain bool `include:"chain"`
+	IncludeToken bool `include:"token"`
 
 	PageCursor uint64     `page:"cursor"`
 	PageLimit  uint64     `page:"limit" default:"15"`
@@ -29,46 +36,44 @@ type listBalancesRequest struct {
 }
 
 func newListBalancesAddress(r *http.Request) (*listBalancesRequest, error) {
-	var req listBalancesRequest
-
-	err := urlval.Decode(r.URL.Query(), &req)
+	chainID, err := strconv.ParseInt(chi.URLParam(r, "chain_id"), 10, 64)
 	if err != nil {
+		return nil, validation.Errors{
+			"chain_id": err,
+		}
+	}
+
+	accountAddress := chi.URLParam(r, "account_address")
+
+	req := listBalancesRequest{
+		ChainID:        chainID,
+		AccountAddress: accountAddress,
+	}
+
+	if err := urlval.Decode(r.URL.Query(), &req); err != nil {
 		return nil, err
 	}
 
-	if req.ChainID != nil {
-		if req.TokenAddress != nil {
-			chain, _, err := parseAddress(r, *req.TokenAddress)
-			if err != nil {
-				return nil, validation.Errors{
-					"filter[token_address]": err,
-				}
-			}
-
-			if chain.ID != *req.ChainID {
-				return nil, validation.Errors{
-					"filter[token_address]": errors.New("chain id should not differ from filter[chain_id]"),
-				}
+	if req.TokenAddress != nil {
+		chain, _, err := parseAddress(r, *req.TokenAddress)
+		if err != nil {
+			return nil, validation.Errors{
+				"filter[token_address]": err,
 			}
 		}
 
-		if req.AccountAddress != nil {
-			chain, _, err := parseAddress(r, *req.AccountAddress)
-			if err != nil {
-				return nil, validation.Errors{
-					"filter[account_address]": err,
-				}
-			}
-
-			if chain.ID != *req.ChainID {
-				return nil, validation.Errors{
-					"filter[account_address]": errors.New("chain id should not differ from filter[chain_id]"),
-				}
+		if chain.ID != req.ChainID {
+			return nil, validation.Errors{
+				"filter[token_address]": errors.New("chain id should not differ from filter[chain_id]"),
 			}
 		}
 	}
 
 	return &req, nil
+}
+
+type ChainBalancesProvider interface {
+	GetBalances(ctx context.Context, address string, chainID int64) ([]data.Balance, error)
 }
 
 func ListBalances(w http.ResponseWriter, r *http.Request) {
@@ -80,8 +85,12 @@ func ListBalances(w http.ResponseWriter, r *http.Request) {
 
 	balances, err := Storage(r).BalanceQ().SelectCtx(r.Context(), data.BalancesSelector{
 		TokenAddress:   req.TokenAddress,
-		AccountAddress: req.AccountAddress,
-		ChainID:        req.ChainID,
+		AccountAddress: &req.AccountAddress,
+		ChainID:        &req.ChainID,
+
+		PageCursor: req.PageCursor,
+		PageSize:   req.PageLimit,
+		Sort:       req.Sorts,
 	})
 	if err != nil {
 		Log(r).WithError(err).Error("failed to select balances")
@@ -97,13 +106,87 @@ func ListBalances(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	if len(balances) == 0 {
+	chain := Config(r).ChainsCfg().Find(req.ChainID)
+
+	if len(balances) != 0 {
+		if req.IncludeChain {
+			chainR := chainToResource(*chain)
+			resp.Included.Add(&chainR)
+		}
+
+		// returning cached balances in case any exist
+		for i, balance := range balances {
+			resp.Data[i] = balanceToResource(balance, *Config(r).ChainsCfg().Find(balance.ChainID))
+			if req.IncludeToken {
+				if err := includeToken(r, &resp, balance, *chain); err != nil {
+					Log(r).WithError(err).Error("failed to include token")
+					ape.RenderErr(w, problems.InternalError())
+					return
+				}
+			}
+		}
+
+		req.PageCursor = uint64(balances[len(balances)-1].ID)
+		resp.Links.Next = fmt.Sprintf("%s?%s", r.URL.Path, urlval.MustEncode(req))
+
+		ape.Render(w, resp)
+
+		return
+	}
+
+	chainBalances, err := BalancesProvider(r).GetBalances(r.Context(), req.AccountAddress, req.ChainID)
+	if err != nil {
+		Log(r).WithError(err).WithFields(logan.F{
+			"account_address": req.AccountAddress,
+			"chain_id":        req.ChainID,
+			"token":           req.TokenAddress,
+		}).Error("failed to get balances from chain")
+		ape.RenderErr(w, problems.InternalError())
+		return
+	}
+
+	if len(chainBalances) == 0 {
 		ape.Render(w, resp)
 		return
 	}
 
+	err = Config(r).NewStorage().BalanceQ().InsertBatchCtx(r.Context(), chainBalances...)
+	if err != nil {
+		Log(r).WithError(err).Error("failed to insert balances")
+		ape.RenderErr(w, problems.InternalError())
+		return
+	}
+
+	balances, err = Storage(r).BalanceQ().SelectCtx(r.Context(), data.BalancesSelector{
+		TokenAddress:   req.TokenAddress,
+		AccountAddress: &req.AccountAddress,
+		ChainID:        &req.ChainID,
+
+		PageCursor: req.PageCursor,
+		PageSize:   req.PageLimit,
+		Sort:       req.Sorts,
+	})
+	if err != nil {
+		Log(r).WithError(err).Error("failed to select balances")
+		ape.RenderErr(w, problems.InternalError())
+		return
+	}
+
+	if req.IncludeChain {
+		chainR := chainToResource(*chain)
+		resp.Included.Add(&chainR)
+	}
+
 	for i, balance := range balances {
-		resp.Data[i] = balanceToResource(balance, *Config(r).Chains().Find(balance.ChainID))
+		resp.Data[i] = balanceToResource(balance, *Config(r).ChainsCfg().Find(balance.ChainID))
+
+		if req.IncludeToken {
+			if err := includeToken(r, &resp, balance, *chain); err != nil {
+				Log(r).WithError(err).Error("failed to include token")
+				ape.RenderErr(w, problems.InternalError())
+				return
+			}
+		}
 	}
 
 	req.PageCursor = uint64(balances[len(balances)-1].ID)
@@ -144,6 +227,39 @@ func balanceToResource(balance data.Balance, chain config.Chain) resources.Balan
 	}
 }
 
+func includeToken(r *http.Request, resp *resources.BalanceListResponse, balance data.Balance, chain config.Chain) error {
+	t, err := Config(r).RedisStore().Tokens().Get(
+		r.Context(),
+		hexutil.Encode(balance.Token),
+		balance.ChainID)
+	if err != nil {
+		return errors.Wrap(err, "failed to get token from redis")
+	}
+
+	if t == nil {
+		Log(r).WithFields(logan.F{
+			"token_address": hexutil.Encode(balance.Token),
+			"chain_id":      balance.ChainID,
+		}).Warn("token not found in redis")
+		return nil
+	}
+
+	resp.Included.Add(&resources.Token{
+		Key: resources.Key{
+			ID:   fmt.Sprintf("%s:%s", chain.Name, t.Address),
+			Type: resources.TOKENS,
+		},
+		Attributes: resources.TokenAttributes{
+			Decimals: t.Decimals,
+			LogoUri:  t.LogoURI,
+			Name:     t.Name,
+			Symbol:   t.Symbol,
+		},
+	})
+
+	return nil
+}
+
 func parseAddress(r *http.Request, raw string) (*config.Chain, string, error) {
 	split := strings.Split(raw, ":")
 
@@ -156,7 +272,7 @@ func parseAddress(r *http.Request, raw string) (*config.Chain, string, error) {
 		return nil, "", errors.Wrap(err, "failed to parse chain id")
 	}
 
-	chain := Config(r).Chains().Find(chainID)
+	chain := Config(r).ChainsCfg().Find(chainID)
 	if chain == nil {
 		return nil, "", errors.New("unsupported chain")
 	}

@@ -8,6 +8,7 @@ import (
 	"gitlab.com/distributed_lab/kit/pgdb"
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/data/pg"
+	"gitlab.com/rarimo/dex-pairs-oracle/pkg/rd"
 )
 
 type Config interface {
@@ -15,8 +16,11 @@ type Config interface {
 	types.Copuser
 	comfig.Listenerer
 	pgdb.Databaser
+	rd.Rediser
 
-	Chains() *ChainsConfig
+	ChainsCfg() *ChainsConfig
+	NewStorage() data.Storage
+	RedisStore() data.RedisStore
 }
 
 type config struct {
@@ -24,6 +28,7 @@ type config struct {
 	types.Copuser
 	comfig.Listenerer
 	pgdb.Databaser
+	rd.Rediser
 
 	chains comfig.Once
 
@@ -37,9 +42,14 @@ func New(getter kv.Getter) Config {
 		Copuser:    copus.NewCopuser(getter),
 		Listenerer: comfig.NewListenerer(getter),
 		Logger:     comfig.NewLogger(getter, comfig.LoggerOpts{}),
+		Rediser:    rd.NewRediser(getter),
 	}
 }
 
 func (c *config) NewStorage() data.Storage {
 	return pg.New(c.DB().Clone())
+}
+
+func (c *config) RedisStore() data.RedisStore {
+	return redisdata.NewStore(c.RedisClient())
 }

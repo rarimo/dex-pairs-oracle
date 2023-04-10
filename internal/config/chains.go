@@ -72,7 +72,7 @@ type TokenInfo struct {
 	LogoURI  string `json:"logoURI" fig:"logo_uri"`
 }
 
-func (c *config) Chains() *ChainsConfig {
+func (c *config) ChainsCfg() *ChainsConfig {
 	return c.chains.Do(func() interface{} {
 		var cfg ChainsConfig
 

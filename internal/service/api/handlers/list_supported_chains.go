@@ -45,7 +45,7 @@ func ListSupportedChain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	chains := filterChains(Config(r).Chains(), req)
+	chains := filterChains(Config(r).ChainsCfg().Chains, req)
 
 	resp := resources.ChainListResponse{
 		Data: make([]resources.Chain, len(chains)),
@@ -53,7 +53,7 @@ func ListSupportedChain(w http.ResponseWriter, r *http.Request) {
 			Self: r.URL.String(),
 		},
 		Included: resources.Included{},
-		Meta:     json.RawMessage(fmt.Sprintf(`{"total":%d}`, len(Config(r).Chains()))),
+		Meta:     json.RawMessage(fmt.Sprintf(`{"total":%d}`, len(Config(r).ChainsCfg().Chains))),
 	}
 
 	if len(chains) == 0 {
