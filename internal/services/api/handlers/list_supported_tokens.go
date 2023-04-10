@@ -5,18 +5,14 @@ import (
 	"net/http"
 	"strings"
 
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
-
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
-
+	"github.com/go-chi/chi/v5"
+	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 	"gitlab.com/distributed_lab/logan/v3"
+	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
+	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
 	"gitlab.com/rarimo/dex-pairs-oracle/resources"
-
-	validation "github.com/go-ozzo/ozzo-validation/v4"
-
-	"github.com/go-chi/chi/v5"
 )
 
 type listSupportedTokensRequest struct {
@@ -75,7 +71,7 @@ func ListSupportedTokens(w http.ResponseWriter, r *http.Request) {
 }
 
 func tokenToResource(token data.Token) resources.Token {
-	return resources.Token{
+	tresource := resources.Token{
 		Key: resources.Key{
 			ID:   token.Address,
 			Type: resources.TOKENS,
@@ -87,4 +83,10 @@ func tokenToResource(token data.Token) resources.Token {
 			LogoUri:  token.LogoURI,
 		},
 	}
+
+	if token.Native {
+		tresource.Attributes.Native = &token.Native
+	}
+
+	return tresource
 }

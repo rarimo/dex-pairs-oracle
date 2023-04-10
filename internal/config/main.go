@@ -21,6 +21,8 @@ type Config interface {
 	ChainsCfg() *ChainsConfig
 	NewStorage() data.Storage
 	RedisStore() data.RedisStore
+	EVM() *evmConfig
+	BalancesObserver() *BalancesObserverConfig
 }
 
 type config struct {
@@ -30,7 +32,9 @@ type config struct {
 	pgdb.Databaser
 	rd.Rediser
 
-	chains comfig.Once
+	chains           comfig.Once
+	evm              comfig.Once
+	balancesObserver comfig.Once
 
 	getter kv.Getter
 }

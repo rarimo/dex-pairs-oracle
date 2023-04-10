@@ -30,6 +30,26 @@ func (q BalanceQ) InsertBatchCtx(ctx context.Context, balances ...data.Balance) 
 	return q.db.ExecContext(ctx, stmt)
 }
 
+func (q BalanceQ) UpsertBatchCtx(ctx context.Context, balances ...data.Balance) error {
+	stmt := squirrel.Insert("public.balances").
+		Columns("account_address", "token", "chain_id",
+			"amount", "created_at", "updated_at")
+
+	for _, balance := range balances {
+		stmt = stmt.
+			Values(balance.AccountAddress, balance.Token, balance.ChainID,
+				balance.Amount, balance.CreatedAt, balance.UpdatedAt)
+	}
+
+	// mitigating conflict on index problems in case balances get re-submitted
+	stmt = stmt.Suffix(
+		`ON CONFLICT(id) DO ` +
+			`UPDATE SET ` +
+			`amount = EXCLUDED.amount, updated_at = EXCLUDED.updated_at`)
+
+	return q.db.ExecContext(ctx, stmt)
+}
+
 func (q BalanceQ) SelectCtx(ctx context.Context, selector data.BalancesSelector) ([]data.Balance, error) {
 	stmt := applyBalancesSelector(
 		squirrel.Select("*").From("public.balances"),

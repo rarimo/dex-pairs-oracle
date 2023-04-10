@@ -25,4 +25,7 @@ allOf:
           logo_uri:
             type: string
             example: "https://tokens.pancakeswap.finance/images/0x25E9d05365c867E59C1904E7463Af9F312296f9E.png"
+          native:
+            type: boolean
+            example: false
 

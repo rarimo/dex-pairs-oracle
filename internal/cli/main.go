@@ -8,13 +8,15 @@ import (
 	"sync"
 	"syscall"
 
+	"gitlab.com/rarimo/dex-pairs-oracle/internal/services"
+
 	"gitlab.com/distributed_lab/logan/v3/errors"
 
 	"github.com/alecthomas/kingpin"
 	"gitlab.com/distributed_lab/kit/kv"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/service/api"
+	"gitlab.com/rarimo/dex-pairs-oracle/internal/services/api"
 )
 
 func Run(args []string) {
@@ -32,7 +34,10 @@ func Run(args []string) {
 	app := kingpin.New("dex-pairs-oracle", "")
 
 	runCmd := app.Command("run", "run command")
-	apiCmd := runCmd.Command("api", "run api") // you can insert custom help
+	apiCmd := runCmd.Command("api", "run api")
+	balancesObserverCmd := runCmd.Command("balances_observer", "run balances observer")
+
+	allCmd := app.Command("all", "run all services")
 
 	migrateCmd := app.Command("migrate", "migrate command")
 	migrateUpCmd := migrateCmd.Command("up", "migrate db up")
@@ -67,7 +72,13 @@ func Run(args []string) {
 	case apiCmd.FullCommand():
 		cfg.Log().Info("starting API")
 		run(api.Run)
-	// handle any custom commands here in the same way
+	case balancesObserverCmd.FullCommand():
+		cfg.Log().Info("starting balances observer")
+		run(services.RunBalancesObserver)
+	case allCmd.FullCommand():
+		cfg.Log().Info("starting all services")
+		run(api.Run)
+		run(services.RunBalancesObserver)
 	case migrateUpCmd.FullCommand():
 		if err := MigrateUp(cfg); err != nil {
 			panic(errors.Wrap(err, "failed to migrate up"))

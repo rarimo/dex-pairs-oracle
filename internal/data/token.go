@@ -7,4 +7,5 @@ type Token struct {
 	Symbol   string `json:"symbol"`
 	Decimals int64  `json:"decimals"`
 	LogoURI  string `json:"logo_uri"`
+	Native   bool   `json:"native"`
 }

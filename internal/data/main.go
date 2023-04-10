@@ -15,6 +15,7 @@ type Storage interface {
 type BalanceQ interface {
 	SelectCtx(ctx context.Context, selector BalancesSelector) ([]Balance, error)
 	InsertBatchCtx(ctx context.Context, balances ...Balance) error
+	UpsertBatchCtx(ctx context.Context, balances ...Balance) error
 }
 
 type GorpMigrationQ interface{}
