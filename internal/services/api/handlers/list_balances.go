@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"gitlab.com/rarimo/dex-pairs-oracle/pkg/ethbalances"
+
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/go-chi/chi/v5"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -109,12 +111,8 @@ func ListBalances(w http.ResponseWriter, r *http.Request) {
 	chain := Config(r).ChainsCfg().Find(req.ChainID)
 
 	if len(balances) != 0 {
-		if req.IncludeChain {
-			chainR := chainToResource(*chain)
-			resp.Included.Add(&chainR)
-		}
-
 		// returning cached balances in case any exist
+
 		for i, balance := range balances {
 			resp.Data[i] = balanceToResource(balance, *Config(r).ChainsCfg().Find(balance.ChainID))
 			if req.IncludeToken {
@@ -124,6 +122,11 @@ func ListBalances(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 			}
+		}
+
+		if req.IncludeChain {
+			chainR := chainToResource(*chain)
+			resp.Included.Add(&chainR)
 		}
 
 		req.PageCursor = uint64(balances[len(balances)-1].ID)
@@ -136,6 +139,13 @@ func ListBalances(w http.ResponseWriter, r *http.Request) {
 
 	chainBalances, err := BalancesProvider(r).GetBalances(r.Context(), req.AccountAddress, req.ChainID)
 	if err != nil {
+		if errors.Cause(err) == ethbalances.ErrChainNotSupported {
+			ape.RenderErr(w, problems.BadRequest(validation.Errors{
+				"chain_id": err,
+			})...)
+			return
+		}
+
 		Log(r).WithError(err).WithFields(logan.F{
 			"account_address": req.AccountAddress,
 			"chain_id":        req.ChainID,

@@ -16,7 +16,8 @@ create table if not exists balances (
   chain_id bigint not null,
   amount int_256 not null default 0,
   created_at timestamp with time zone not null default now(),
-  updated_at timestamp with time zone not null default now()
+  updated_at timestamp with time zone not null default now(),
+  last_known_block bigint not null default 0
 );
 
 create index if not exists balances_token_idx on balances using btree(token);

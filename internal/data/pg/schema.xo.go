@@ -54,19 +54,19 @@ func (s Storage) BalanceQ() data.BalanceQ {
 	return NewBalanceQ(s.DB())
 }
 
-var colsBalance = `id, account_address, token, chain_id, amount, created_at, updated_at`
+var colsBalance = `id, account_address, token, chain_id, amount, created_at, updated_at, last_known_block`
 
 // InsertCtx inserts a Balance to the database.
 func (q BalanceQ) InsertCtx(ctx context.Context, b *data.Balance) error {
 	// insert (primary key generated and returned by database)
 	sqlstr := `INSERT INTO public.balances (` +
-		`account_address, token, chain_id, amount, created_at, updated_at` +
+		`account_address, token, chain_id, amount, created_at, updated_at, last_known_block` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6` +
+		`$1, $2, $3, $4, $5, $6, $7` +
 		`) RETURNING id`
 		// run
 
-	err := q.db.GetRawContext(ctx, &b.ID, sqlstr, b.AccountAddress, b.Token, b.ChainID, b.Amount, b.CreatedAt, b.UpdatedAt)
+	err := q.db.GetRawContext(ctx, &b.ID, sqlstr, b.AccountAddress, b.Token, b.ChainID, b.Amount, b.CreatedAt, b.UpdatedAt, b.LastKnownBlock)
 	if err != nil {
 		return errors.Wrap(err, "failed to execute insert")
 	}
@@ -83,10 +83,10 @@ func (q BalanceQ) Insert(b *data.Balance) error {
 func (q BalanceQ) UpdateCtx(ctx context.Context, b *data.Balance) error {
 	// update with composite primary key
 	sqlstr := `UPDATE public.balances SET ` +
-		`account_address = $1, token = $2, chain_id = $3, amount = $4, updated_at = $5 ` +
-		`WHERE id = $6`
+		`account_address = $1, token = $2, chain_id = $3, amount = $4, updated_at = $5, last_known_block = $6 ` +
+		`WHERE id = $7`
 	// run
-	err := q.db.ExecRawContext(ctx, sqlstr, b.AccountAddress, b.Token, b.ChainID, b.Amount, b.UpdatedAt, b.ID)
+	err := q.db.ExecRawContext(ctx, sqlstr, b.AccountAddress, b.Token, b.ChainID, b.Amount, b.UpdatedAt, b.LastKnownBlock, b.ID)
 	return errors.Wrap(err, "failed to execute update")
 }
 
@@ -99,15 +99,15 @@ func (q BalanceQ) Update(b *data.Balance) error {
 func (q BalanceQ) UpsertCtx(ctx context.Context, b *data.Balance) error {
 	// upsert
 	sqlstr := `INSERT INTO public.balances (` +
-		`id, account_address, token, chain_id, amount, created_at, updated_at` +
+		`id, account_address, token, chain_id, amount, created_at, updated_at, last_known_block` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6, $7` +
+		`$1, $2, $3, $4, $5, $6, $7, $8` +
 		`)` +
 		` ON CONFLICT (id) DO ` +
 		`UPDATE SET ` +
-		`account_address = EXCLUDED.account_address, token = EXCLUDED.token, chain_id = EXCLUDED.chain_id, amount = EXCLUDED.amount, updated_at = EXCLUDED.updated_at `
+		`account_address = EXCLUDED.account_address, token = EXCLUDED.token, chain_id = EXCLUDED.chain_id, amount = EXCLUDED.amount, updated_at = EXCLUDED.updated_at, last_known_block = EXCLUDED.last_known_block `
 	// run
-	if err := q.db.ExecRawContext(ctx, sqlstr, b.ID, b.AccountAddress, b.Token, b.ChainID, b.Amount, b.CreatedAt, b.UpdatedAt); err != nil {
+	if err := q.db.ExecRawContext(ctx, sqlstr, b.ID, b.AccountAddress, b.Token, b.ChainID, b.Amount, b.CreatedAt, b.UpdatedAt, b.LastKnownBlock); err != nil {
 		return errors.Wrap(err, "failed to execute upsert stmt")
 	}
 	return nil
@@ -232,7 +232,7 @@ func (q GorpMigrationQ) Delete(gm *data.GorpMigration) error {
 func (q BalanceQ) BalancesByAccountAddressCtx(ctx context.Context, accountAddress []byte, isForUpdate bool) ([]data.Balance, error) {
 	// query
 	sqlstr := `SELECT ` +
-		`id, account_address, token, chain_id, amount, created_at, updated_at ` +
+		`id, account_address, token, chain_id, amount, created_at, updated_at, last_known_block ` +
 		`FROM public.balances ` +
 		`WHERE account_address = $1`
 	// run
@@ -261,7 +261,7 @@ func (q BalanceQ) BalancesByAccountAddress(accountAddress []byte, isForUpdate bo
 func (q BalanceQ) BalancesByChainIDCtx(ctx context.Context, chainID int64, isForUpdate bool) ([]data.Balance, error) {
 	// query
 	sqlstr := `SELECT ` +
-		`id, account_address, token, chain_id, amount, created_at, updated_at ` +
+		`id, account_address, token, chain_id, amount, created_at, updated_at, last_known_block ` +
 		`FROM public.balances ` +
 		`WHERE chain_id = $1`
 	// run
@@ -290,7 +290,7 @@ func (q BalanceQ) BalancesByChainID(chainID int64, isForUpdate bool) ([]data.Bal
 func (q BalanceQ) BalanceByIDCtx(ctx context.Context, id int64, isForUpdate bool) (*data.Balance, error) {
 	// query
 	sqlstr := `SELECT ` +
-		`id, account_address, token, chain_id, amount, created_at, updated_at ` +
+		`id, account_address, token, chain_id, amount, created_at, updated_at, last_known_block ` +
 		`FROM public.balances ` +
 		`WHERE id = $1`
 	// run
@@ -323,7 +323,7 @@ func (q BalanceQ) BalanceByID(id int64, isForUpdate bool) (*data.Balance, error)
 func (q BalanceQ) BalancesByTokenCtx(ctx context.Context, token []byte, isForUpdate bool) ([]data.Balance, error) {
 	// query
 	sqlstr := `SELECT ` +
-		`id, account_address, token, chain_id, amount, created_at, updated_at ` +
+		`id, account_address, token, chain_id, amount, created_at, updated_at, last_known_block ` +
 		`FROM public.balances ` +
 		`WHERE token = $1`
 	// run

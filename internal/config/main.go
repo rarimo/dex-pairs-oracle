@@ -55,5 +55,5 @@ func (c *config) NewStorage() data.Storage {
 }
 
 func (c *config) RedisStore() data.RedisStore {
-	return redisdata.NewStore(c.RedisClient())
+	panic("implement me") // redisdata.NewStore(c.RedisClient())
 }

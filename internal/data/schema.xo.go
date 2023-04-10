@@ -62,13 +62,14 @@ func (ss StringSlice) Value() (driver.Value, error) {
 	return "{" + strings.Join(v, ",") + "}", nil
 } // Balance represents a row from 'public.balances'.
 type Balance struct {
-	ID             int64     `db:"id" json:"id" structs:"-"`                                         // id
-	AccountAddress []byte    `db:"account_address" json:"account_address" structs:"account_address"` // account_address
-	Token          []byte    `db:"token" json:"token" structs:"token"`                               // token
-	ChainID        int64     `db:"chain_id" json:"chain_id" structs:"chain_id"`                      // chain_id
-	Amount         Int256    `db:"amount" json:"amount" structs:"amount"`                            // amount
-	CreatedAt      time.Time `db:"created_at" json:"created_at" structs:"created_at"`                // created_at
-	UpdatedAt      time.Time `db:"updated_at" json:"updated_at" structs:"updated_at"`                // updated_at
+	ID             int64     `db:"id" json:"id" structs:"-"`                                            // id
+	AccountAddress []byte    `db:"account_address" json:"account_address" structs:"account_address"`    // account_address
+	Token          []byte    `db:"token" json:"token" structs:"token"`                                  // token
+	ChainID        int64     `db:"chain_id" json:"chain_id" structs:"chain_id"`                         // chain_id
+	Amount         Int256    `db:"amount" json:"amount" structs:"amount"`                               // amount
+	CreatedAt      time.Time `db:"created_at" json:"created_at" structs:"created_at"`                   // created_at
+	UpdatedAt      time.Time `db:"updated_at" json:"updated_at" structs:"updated_at"`                   // updated_at
+	LastKnownBlock int64     `db:"last_known_block" json:"last_known_block" structs:"last_known_block"` // last_known_block
 
 }
 
