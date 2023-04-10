@@ -25,4 +25,5 @@ type RedisStore interface {
 
 type TokensQ interface {
 	Get(ctx context.Context, address string, chainID int64) (*Token, error)
+	All(ctx context.Context, chain int64) ([]Token, error)
 }

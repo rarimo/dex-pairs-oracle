@@ -35,6 +35,15 @@ type ChainsConfig struct {
 	Chains []Chain `fig:"chains,required"`
 }
 
+func (c ChainsConfig) FindByName(name string) *Chain {
+	for _, chain := range c.Chains {
+		if chain.Name == name {
+			return &chain
+		}
+	}
+	return nil
+}
+
 func (c ChainsConfig) Find(id int64) *Chain {
 	for _, chain := range c.Chains {
 		if chain.ID == id {
