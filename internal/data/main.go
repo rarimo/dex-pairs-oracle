@@ -22,10 +22,19 @@ type GorpMigrationQ interface{}
 
 type RedisStore interface {
 	Tokens() TokensQ
+	TokenLists() TokenListsQ
 }
 
 type TokensQ interface {
 	Get(ctx context.Context, address string, chainID int64) (*Token, error)
 	All(ctx context.Context, chain int64) ([]Token, error)
 	Put(ctx context.Context, tokens ...Token) error
+}
+
+type TokenListsQ interface {
+	GetURLs(ctx context.Context, chainID int64) ([]string, error)
+	Get(ctx context.Context, chainID int64, name string) (*VersionedTokenList, error)
+
+	PutURLs(ctx context.Context, chainID int64, urls ...string) error
+	Put(ctx context.Context, chainID int64, tokenList VersionedTokenList) error
 }

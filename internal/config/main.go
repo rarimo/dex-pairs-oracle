@@ -23,6 +23,7 @@ type Config interface {
 	RedisStore() data.RedisStore
 	EVM() *evmConfig
 	BalancesObserver() *BalancesObserverConfig
+	TokensObserver() *TokensObserverConfig
 }
 
 type config struct {
@@ -35,6 +36,7 @@ type config struct {
 	chains           comfig.Once
 	evm              comfig.Once
 	balancesObserver comfig.Once
+	tokensObserver   comfig.Once
 
 	getter kv.Getter
 }
