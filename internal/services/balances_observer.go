@@ -5,6 +5,8 @@ import (
 	"math/big"
 	"time"
 
+	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
+
 	"gitlab.com/rarimo/dex-pairs-oracle/pkg/ethamounts"
 
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -26,39 +28,34 @@ import (
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
 )
 
-var (
-	EthZeroAddr = common.Address{}
-)
-
 func RunBalancesObserver(ctx context.Context, cfg config.Config) {
 	observer := balancesObserver{
 		log:             cfg.Log(),
 		storage:         cfg.NewStorage(),
 		chains:          cfg.ChainsCfg(),
-		ethclient:       cfg.EVM().RPCClient,
-		ethAmounter:     ethamounts.NewProvider(cfg.EVM().RPCClient),
+		ethAmounter:     ethamounts.NewProvider(cfg.ChainsCfg()),
 		observePageSize: cfg.BalancesObserver().PageSize,
 	}
 
 	running.WithBackOff(ctx, observer.log, "balances_observer",
 		observer.runOnce,
-		cfg.BalancesObserver().Period,
-		2*cfg.BalancesObserver().Period,
-		5*cfg.BalancesObserver().Period)
+		cfg.BalancesObserver().Interval,
+		2*cfg.BalancesObserver().Interval,
+		5*cfg.BalancesObserver().Interval)
 
 }
 
 type EthAmounter interface {
 	// TODO handle native token here as well
-	Amount(ctx context.Context, token common.Address, account common.Address, blockNumber *big.Int) (*big.Int, error)
+	Amount(ctx context.Context, chainID int64, token common.Address, account common.Address) (amount *big.Int, blockNumber *big.Int, err error)
 }
 
 type balancesObserver struct {
 	log     *logan.Entry
 	storage data.Storage
-	chains  *config.ChainsConfig
+	chains  *chains.Config
 
-	ethclient   *ethclient.Client
+	ethClients  map[int64]*ethclient.Client // map[chain_id]client
 	ethAmounter EthAmounter
 
 	observePageSize uint64
@@ -68,11 +65,6 @@ func (b balancesObserver) runOnce(ctx context.Context) error {
 	cursor := uint64(0) // it's okay i guess (in case of big number of balances should be changed to proper cursor from redis)
 
 	running.UntilSuccess(ctx, b.log, "run_once", func(ctx context.Context) (bool, error) {
-		block, err := b.ethclient.BlockByNumber(ctx, nil)
-		if err != nil {
-			return false, errors.Wrap(err, "failed to get latest block number")
-		}
-
 		balances, err := b.storage.BalanceQ().SelectCtx(ctx, data.BalancesSelector{
 			PageCursor: cursor,
 			PageSize:   b.observePageSize,
@@ -99,18 +91,19 @@ func (b balancesObserver) runOnce(ctx context.Context) error {
 
 			switch chain.Type {
 			case tokenmanager.NetworkType_EVM:
-				amount, err := b.ethAmounter.Amount(ctx,
+				amount, block, err := b.ethAmounter.Amount(ctx,
+					balances[i].ChainID,
 					common.BytesToAddress(balances[i].Token),
-					common.BytesToAddress(balances[i].AccountAddress),
-					block.Number())
+					common.BytesToAddress(balances[i].AccountAddress))
 				if err != nil {
 					return false, errors.Wrap(err, "failed to get token balance", logan.F{
 						"token":   hexutil.Encode(balances[i].Token),
 						"account": hexutil.Encode(balances[i].AccountAddress),
-						"block":   block.Number(),
+						"block":   block.String(),
 					})
 				}
 
+				balances[i].LastKnownBlock = block.Int64()
 				balances[i].Amount = data.Int256{Int: amount}
 			default: // solana, near etc.
 				b.log.WithField("chain_id", balances[i].ChainID).Debug("chain type not supported")

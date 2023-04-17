@@ -58,7 +58,7 @@ func (q BalanceQ) SelectCtx(ctx context.Context, selector data.BalancesSelector)
 	var balances []data.Balance
 
 	if err := q.db.SelectContext(ctx, &balances, stmt); err != nil {
-		return nil, errors.Wrap(err, "failed to select transfers")
+		return nil, errors.Wrap(err, "failed to select balances")
 	}
 
 	return balances, nil
@@ -66,7 +66,7 @@ func (q BalanceQ) SelectCtx(ctx context.Context, selector data.BalancesSelector)
 
 func applyBalancesSelector(stmt squirrel.SelectBuilder, selector data.BalancesSelector) squirrel.SelectBuilder {
 	if selector.ChainID != nil {
-		stmt = stmt.Where(squirrel.Eq{"chain": selector.ChainID})
+		stmt = stmt.Where(squirrel.Eq{"chain_id": selector.ChainID})
 	}
 
 	if selector.AccountAddress != nil {
@@ -77,19 +77,31 @@ func applyBalancesSelector(stmt squirrel.SelectBuilder, selector data.BalancesSe
 		stmt = stmt.Where(squirrel.Eq{"token": hexutil.MustDecode(*selector.TokenAddress)})
 	}
 
+	stmt = applyBalancesPagination(stmt, selector.Sort, selector.PageCursor, selector.PageSize)
+
 	return stmt
 }
 
-func applyTransfersPagination(stmt squirrel.SelectBuilder, sorts pgdb.Sorts, cursor, limit uint64) squirrel.SelectBuilder {
+func applyBalancesPagination(stmt squirrel.SelectBuilder, sorts pgdb.Sorts, cursor, limit uint64) squirrel.SelectBuilder {
 	stmt = stmt.Limit(limit)
 
 	if len(sorts) == 0 {
-		sorts = pgdb.Sorts{"-time"}
+		sorts = pgdb.Sorts{"token", "id"}
+	}
+
+	stmtSorts := pgdb.Sorts{"token"}
+	for _, sort := range sorts {
+		if sort == "token" || sort == "-token" {
+			continue
+		}
+
+		stmtSorts = append(stmtSorts, sort)
 	}
 
 	stmt = sorts.ApplyTo(stmt, map[string]string{
-		"id":   "id",
-		"time": "rarimo_tx_timestamp",
+		"id":    "id",
+		"token": "token",
+		"time":  "created_at",
 	})
 
 	if cursor != 0 {

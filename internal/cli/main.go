@@ -36,8 +36,9 @@ func Run(args []string) {
 	runCmd := app.Command("run", "run command")
 	apiCmd := runCmd.Command("api", "run api")
 	balancesObserverCmd := runCmd.Command("balances_observer", "run balances observer")
+	tokensObserverCmd := runCmd.Command("tokens_observer", "run tokens observer")
 
-	allCmd := app.Command("all", "run all services")
+	allCmd := runCmd.Command("all", "run all services")
 
 	migrateCmd := app.Command("migrate", "migrate command")
 	migrateUpCmd := migrateCmd.Command("up", "migrate db up")
@@ -75,10 +76,14 @@ func Run(args []string) {
 	case balancesObserverCmd.FullCommand():
 		cfg.Log().Info("starting balances observer")
 		run(services.RunBalancesObserver)
+	case tokensObserverCmd.FullCommand():
+		cfg.Log().Info("starting tokens observer")
+		run(services.RunTokensObserver)
 	case allCmd.FullCommand():
 		cfg.Log().Info("starting all services")
 		run(api.Run)
 		run(services.RunBalancesObserver)
+		run(services.RunTokensObserver)
 	case migrateUpCmd.FullCommand():
 		if err := MigrateUp(cfg); err != nil {
 			panic(errors.Wrap(err, "failed to migrate up"))

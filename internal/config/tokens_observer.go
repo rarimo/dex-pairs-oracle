@@ -10,7 +10,7 @@ import (
 )
 
 type TokensObserverConfig struct {
-	Period time.Duration `fig:"period"`
+	Interval time.Duration `fig:"interval,required"`
 }
 
 func (c *config) TokensObserver() *TokensObserverConfig {

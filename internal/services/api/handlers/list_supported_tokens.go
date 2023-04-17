@@ -5,18 +5,18 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 	"gitlab.com/distributed_lab/logan/v3"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
+	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
 	"gitlab.com/rarimo/dex-pairs-oracle/resources"
 )
 
 type listSupportedTokensRequest struct {
-	Chain config.Chain
+	Chain chains.Chain
 }
 
 func newListSupportedTokensRequest(r *http.Request) (*listSupportedTokensRequest, error) {
@@ -34,7 +34,7 @@ func newListSupportedTokensRequest(r *http.Request) (*listSupportedTokensRequest
 	}, nil
 }
 
-func ListSupportedTokens(w http.ResponseWriter, r *http.Request) {
+func ListSupportedEVMTokens(w http.ResponseWriter, r *http.Request) {
 	req, err := newListSupportedTokensRequest(r)
 	if err != nil {
 		ape.RenderErr(w, problems.BadRequest(err)...)

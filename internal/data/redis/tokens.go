@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
+	"strconv"
 
 	"github.com/go-redis/redis/v8"
+	"github.com/spf13/cast"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
@@ -15,15 +18,29 @@ type tokensQ struct {
 	r *redis.Client
 }
 
-func (q *tokensQ) Put(ctx context.Context, tokens ...data.Token) error {
-	for _, t := range tokens {
-		err := q.r.SAdd(ctx, makeChainTokensKey(t.ChainID), makeTokenKey(t.Address, t.ChainID), 0).Err()
-		if err != nil {
-			return errors.Wrap(err, "failed to add token to chain tokens set", logan.F{
-				"address":  t.Address,
-				"chain_id": t.ChainID,
+func (q *tokensQ) Put(ctx context.Context, chainID int64, tokens ...data.Token) error {
+	setKey := makeChainTokensKey(chainID)
+
+	//currentSize, err := q.r.ZCard(ctx, setKey).Result()
+	//if err != nil {
+	//	return errors.Wrap(err, "failed to get chain tokens set size", logan.F{
+	//		"key": setKey,
+	//	})
+	//}
+
+	members := make([]redis.Z, len(tokens))
+
+	for i, t := range tokens {
+		if t.ChainID != chainID {
+			return errors.From(errors.New("token chain id doesn't match chain id"), logan.F{
+				"token_addr":     t.Address,
+				"token_chain_id": t.ChainID,
+				"chain_id":       chainID,
 			})
 		}
+
+		tokenCursor := int64(1) // + currentSize + int64(i)
+		t.Cursor = strconv.FormatInt(tokenCursor, 10)
 
 		encoded, err := json.Marshal(t)
 		if err != nil {
@@ -33,16 +50,26 @@ func (q *tokensQ) Put(ctx context.Context, tokens ...data.Token) error {
 			})
 		}
 
-		err = q.r.Set(ctx, makeTokenKey(t.Address, t.ChainID), encoded, 0).Err()
+		tk := makeTokenKey(t.Address, t.ChainID)
+
+		err = q.r.Set(ctx, tk, encoded, 0).Err()
 		if err != nil {
 			return errors.Wrap(err, "failed to set token", logan.F{
 				"address":  t.Address,
 				"chain_id": t.ChainID,
 			})
 		}
+
+		members[i] = redis.Z{
+			Score:  float64(tokenCursor),
+			Member: tk,
+		}
 	}
 
-	return nil
+	return q.r.ZAddArgs(ctx, setKey, redis.ZAddArgs{
+		Members: members,
+		NX:      true,
+	}).Err()
 }
 
 func (q *tokensQ) Get(ctx context.Context, address string, chainID int64) (*data.Token, error) {
@@ -73,6 +100,73 @@ func (q *tokensQ) Get(ctx context.Context, address string, chainID int64) (*data
 	}
 
 	return &token, nil
+}
+
+func (q *tokensQ) Page(ctx context.Context, chainID int64, cursor string, limit int64) ([]data.Token, error) {
+	setKey := makeChainTokensKey(chainID)
+
+	start := "-"
+	if cursor != "" {
+		start = fmt.Sprintf("(%s", cursor)
+	}
+
+	// zrange chain_tokens:56 ({cursor} + bylex limit 0 10
+	tokenKeysWithScores, err := q.r.ZRangeArgsWithScores(ctx, redis.ZRangeArgs{
+		Key:   setKey,
+		ByLex: true,
+		Start: start,
+		Stop:  "+",
+		Count: limit,
+	}).Result()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get token keys", logan.F{
+			"key": setKey,
+		})
+	}
+
+	if len(tokenKeysWithScores) == 0 {
+		return nil, nil
+	}
+
+	keys := make([]string, len(tokenKeysWithScores))
+
+	for i, tokenKeyEntry := range tokenKeysWithScores {
+		keys[i] = cast.ToString(tokenKeyEntry.Member)
+	}
+
+	rawTokens, err := q.r.MGet(ctx, keys...).Result()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get tokens", logan.F{
+			"keys": keys,
+		})
+	}
+
+	tokens := make([]data.Token, len(rawTokens))
+	for i, raw := range rawTokens {
+		rawS, ok := raw.(string)
+		if !ok {
+			return nil, errors.From(errors.New("failed to cast token to string"), logan.F{
+				"raw": raw,
+			})
+		}
+
+		var token data.Token
+		err = json.Unmarshal([]byte(rawS), &token)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to unmarshal token", logan.F{
+				"raw": raw,
+			})
+		}
+
+		tokens[i] = token
+	}
+
+	// to make sure that tokens are sorted by address after mget
+	sort.Slice(tokens, func(i, j int) bool {
+		return tokens[i].Address < tokens[j].Address
+	})
+
+	return tokens, nil
 }
 
 func (q *tokensQ) All(ctx context.Context, chain int64) ([]data.Token, error) {

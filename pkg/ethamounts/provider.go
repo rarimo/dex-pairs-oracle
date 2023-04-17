@@ -4,36 +4,71 @@ import (
 	"context"
 	"math/big"
 
+	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
+
 	abibind "github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/rarimo/dex-pairs-oracle/pkg/ethamounts/bind"
+	"gitlab.com/rarimo/dex-pairs-oracle/pkg/etherrors"
 )
 
 type Provider struct {
-	contracts map[common.Address]*bind.ERC20Caller
-	ethclient *ethclient.Client
+	chains       *chains.Config
+	contracts    map[common.Address]*bind.ERC20Caller
+	chainClients map[int64]*ethclient.Client
 }
 
-func NewProvider(ethclient *ethclient.Client) *Provider {
+func NewProvider(chains *chains.Config) *Provider {
 	return &Provider{
-		contracts: make(map[common.Address]*bind.ERC20Caller),
-		ethclient: ethclient,
+		chains:       chains,
+		contracts:    make(map[common.Address]*bind.ERC20Caller),
+		chainClients: make(map[int64]*ethclient.Client),
 	}
 }
 
-func (p *Provider) Amount(ctx context.Context, token common.Address, account common.Address, blockNumber *big.Int) (*big.Int, error) {
+func (p *Provider) Amount(ctx context.Context, chainID int64, token common.Address, account common.Address) (*big.Int, *big.Int, error) {
+	chain := p.chains.Find(chainID)
+	if chain == nil {
+		return nil, nil, etherrors.ErrChainNotSupported
+	}
+
+	ethc, ok := p.chainClients[chainID]
+	if !ok {
+		dial, err := ethclient.Dial(chain.RPCUrl.String())
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "failed to dial rpc", logan.F{
+				"chain_id": chainID,
+			})
+		}
+		p.chainClients[chainID] = dial
+		ethc = dial
+	}
+
+	block, err := ethc.BlockByNumber(ctx, nil)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to get latest block")
+	}
+
 	if isZeroAddr(token) {
-		return p.ethclient.BalanceAt(ctx, account, blockNumber)
+		balance, err := ethc.BalanceAt(ctx, account, block.Number())
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "failed to get balance", logan.F{
+				"account": account.String(),
+				"block":   block.Number().String(),
+			})
+		}
+
+		return balance, block.Number(), nil
 	}
 
 	contract := p.contracts[token]
 	if contract == nil {
-		erc20, err := bind.NewERC20Caller(token, p.ethclient)
+		erc20, err := bind.NewERC20Caller(token, ethc)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to init erc20 caller", logan.F{
+			return nil, nil, errors.Wrap(err, "failed to init erc20 caller", logan.F{
 				"token": token.String(),
 			})
 		}
@@ -42,10 +77,19 @@ func (p *Provider) Amount(ctx context.Context, token common.Address, account com
 		contract = erc20
 	}
 
-	return contract.BalanceOf(&abibind.CallOpts{
-		BlockNumber: blockNumber,
+	balance, err := contract.BalanceOf(&abibind.CallOpts{
+		BlockNumber: block.Number(),
 		Context:     ctx,
 	}, account)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to get balance", logan.F{
+			"account": account.String(),
+			"block":   block.Number().String(),
+			"token":   token.String(),
+		})
+	}
+
+	return balance, block.Number(), nil
 }
 
 func isZeroAddr(addr common.Address) bool {

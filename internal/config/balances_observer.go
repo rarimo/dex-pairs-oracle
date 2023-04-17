@@ -9,15 +9,15 @@ import (
 )
 
 type BalancesObserverConfig struct {
-	PageSize uint64        `fig:"page_size,required"`
-	Period   time.Duration `fig:"period,required"`
+	PageSize uint64        `fig:"page_size"`
+	Interval time.Duration `fig:"interval"`
 }
 
 func (c *config) BalancesObserver() *BalancesObserverConfig {
 	return c.balancesObserver.Do(func() interface{} {
 		balancesObserver := BalancesObserverConfig{
 			PageSize: 100,
-			Period:   1 * time.Minute,
+			Interval: 1 * time.Minute,
 		}
 
 		yamlName := "balances_observer"

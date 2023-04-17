@@ -10,14 +10,14 @@ import (
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 	"gitlab.com/distributed_lab/urlval"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
+	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
 	"gitlab.com/rarimo/dex-pairs-oracle/resources"
 	tokenmanager "gitlab.com/rarimo/rarimo-core/x/tokenmanager/types"
 )
 
 type listSupportedChainRequest struct {
 	Type *tokenmanager.NetworkType `filter:"type"`
-	Kind *config.ChainKind         `filter:"kind"`
+	Kind *chains.Kind              `filter:"kind"`
 }
 
 func newListSupportedChainRequest(r *http.Request) (*listSupportedChainRequest, error) {
@@ -34,7 +34,7 @@ func newListSupportedChainRequest(r *http.Request) (*listSupportedChainRequest, 
 func validateListSupportedChainRequest(req listSupportedChainRequest) error {
 	return validation.Errors{
 		"filter[type]": validation.Validate(req.Type, validation.In(append(resources.SupportedChainTypes(), nil)...)),
-		"filter[kind]": validation.Validate(req.Kind, validation.In(config.ChainKindTestnet, config.ChainKindMainnet)),
+		"filter[kind]": validation.Validate(req.Kind, validation.In(chains.KindTestnet, chains.KindMainnet)),
 	}.Filter()
 }
 
@@ -68,7 +68,7 @@ func ListSupportedChain(w http.ResponseWriter, r *http.Request) {
 	ape.Render(w, resp)
 }
 
-func chainToResource(chain config.Chain) resources.Chain {
+func chainToResource(chain chains.Chain) resources.Chain {
 	return resources.Chain{
 		Key: resources.Key{
 			ID:   strconv.FormatInt(chain.ID, 10),
@@ -86,11 +86,11 @@ func chainToResource(chain config.Chain) resources.Chain {
 	}
 }
 
-func chainKindToResource(kind config.ChainKind) resources.ChainKind {
+func chainKindToResource(kind chains.Kind) resources.ChainKind {
 	switch kind {
-	case config.ChainKindMainnet:
+	case chains.KindMainnet:
 		return resources.ChainKindMainnet
-	case config.ChainKindTestnet:
+	case chains.KindTestnet:
 		return resources.ChainKindTestnet
 	default:
 		panic("unknown chain kind")
@@ -112,7 +112,7 @@ func chainTypeToResource(typ tokenmanager.NetworkType) resources.ChainType {
 	}
 }
 
-func filterChains(chains []config.Chain, req *listSupportedChainRequest) []config.Chain {
+func filterChains(chains []chains.Chain, req *listSupportedChainRequest) []chains.Chain {
 	n := 0
 	for _, chain := range chains {
 		if req.Type != nil && *req.Type != chain.Type {

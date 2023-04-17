@@ -8,8 +8,22 @@ db:
 listener:
   addr: :8000
 
+redis:
+  addr: localhost:6379
+  db: 0
+
+tokens_observer:
+  interval: 5s
+
+balances_observer:
+  interval: 5s
+  page_size: 100
+
+evm:
+  rpc: "wss://goerli.infura.io/ws/v3/633a4db0ad9c4684a7067bab4fa6c572"
+
 chains:
-  chains:
+  list:
     - id: 56
       name: "BSC"
       rpc_url: "https://bsc-dataseed.binance.org/"
@@ -23,7 +37,7 @@ chains:
       tokens_info:
         list_urls:
           - "https://tokens.pancakeswap.finance/pancakeswap-extended.json"
-          - "https://github.com/pancakeswap/token-list/blob/main/lists/cmc.json"
+          - "https://raw.githubusercontent.com/pancakeswap/token-list/main/lists/cmc.json"
         tokens:
           - chain_id: 97
             address: "0x8BaBbB98678facC7342735486C851ABD7A0d17Ca"

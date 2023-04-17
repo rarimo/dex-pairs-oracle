@@ -6,8 +6,8 @@ type TokenListVersion struct {
 	Patch int `json:"patch"`
 }
 
-type VersionedTokenList struct {
+type TokenListURL struct {
 	Name    string           `json:"name"`
 	Version TokenListVersion `json:"version"`
-	URI     string           `json:"uri"`
+	URL     string           `json:"uri"`
 }

@@ -2,51 +2,30 @@ package ethbalances
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/ethclient"
 	"gitlab.com/distributed_lab/logan"
 	"gitlab.com/distributed_lab/logan/v3/errors"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
 	"gitlab.com/rarimo/dex-pairs-oracle/pkg/ethamounts"
 )
 
-var (
-	ErrChainNotSupported = errors.New("chain not supported")
-)
-
 type Provider struct {
-	ethclient    *ethclient.Client
-	redisstore   data.RedisStore
-	chains       config.ChainsConfig
-	amountGetter *ethamounts.Provider
+	redisstore data.RedisStore
+	amounter   *ethamounts.Provider // map[chainID:contractAddr]amounter
 }
 
-func NewProvider(ethclient *ethclient.Client, redisstore data.RedisStore, chains config.ChainsConfig) *Provider {
+func NewProvider(redisstore data.RedisStore, provider *ethamounts.Provider) *Provider {
 	return &Provider{
-		ethclient:    ethclient,
-		redisstore:   redisstore,
-		chains:       chains,
-		amountGetter: ethamounts.NewProvider(ethclient),
+		redisstore: redisstore,
+		amounter:   provider,
 	}
 }
 
-func (p *Provider) GetBalances(ctx context.Context, address string, chainID int64) ([]data.Balance, error) {
-	chain := p.chains.Find(chainID)
-	if chain == nil {
-		return nil, ErrChainNotSupported
-	}
-
-	block, err := p.ethclient.BlockByNumber(ctx, nil)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get block number", logan.F{
-			"chain_id": chainID,
-		})
-	}
-
-	tokens, err := p.redisstore.Tokens().All(ctx, chainID)
+func (p *Provider) GetBalances(ctx context.Context, address string, chainID int64, cursor string, limit int64) ([]data.Balance, error) {
+	tokens, err := p.redisstore.Tokens().Page(ctx, chainID, cursor, limit)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get tokens by chain id", logan.F{
 			"chain_id": chainID,
@@ -62,9 +41,12 @@ func (p *Provider) GetBalances(ctx context.Context, address string, chainID int6
 	accountAddr := common.HexToAddress(address)
 
 	for i, token := range tokens {
+		if token.Address == "0x9CEFd9588f076c5f805341864adC8a6F077A5b99" {
+			fmt.Println("bup")
+		}
 		tokenAddr := common.HexToAddress(token.Address)
 
-		amount, err := p.amountGetter.Amount(ctx, tokenAddr, accountAddr, block.Number())
+		amount, block, err := p.amounter.Amount(ctx, chainID, tokenAddr, accountAddr)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get amount", logan.F{
 				"address": address,
@@ -77,11 +59,11 @@ func (p *Provider) GetBalances(ctx context.Context, address string, chainID int6
 		balances[i] = data.Balance{
 			AccountAddress: accountAddr.Bytes(),
 			Token:          tokenAddr.Bytes(),
-			ChainID:        chain.ID,
+			ChainID:        chainID,
 			Amount:         data.Int256{Int: amount},
 			CreatedAt:      now,
 			UpdatedAt:      now,
-			LastKnownBlock: block.Number().Int64(),
+			LastKnownBlock: block.Int64(),
 		}
 	}
 

@@ -3,7 +3,8 @@ package services
 import (
 	"context"
 	"fmt"
-	"net/http"
+
+	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
 
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
@@ -14,10 +15,9 @@ import (
 )
 
 func RunTokensObserver(ctx context.Context, cfg config.Config) {
-	provider := pools.NewTokensListProvider(cfg.Log(), http.DefaultClient, cfg.RedisClient())
-
-	if err := provider.Init(ctx, *cfg.ChainsCfg()); err != nil {
-		panic(errors.Wrap(err, "failed to init token list provider"))
+	provider, err := pools.NewTokensListProvider(ctx, cfg)
+	if err != nil {
+		panic(errors.Wrap(err, "failed to create tokens list provider"))
 	}
 
 	observer := tokensObserver{
@@ -29,21 +29,19 @@ func RunTokensObserver(ctx context.Context, cfg config.Config) {
 
 	running.WithBackOff(ctx, observer.log, "tokens_observer",
 		observer.runOnce,
-		cfg.TokensObserver().Period, 2*cfg.TokensObserver().Period, 5*cfg.TokensObserver().Period)
+		cfg.TokensObserver().Interval, 2*cfg.TokensObserver().Interval, 5*cfg.TokensObserver().Interval)
 
 }
 
 type tokensObserver struct {
 	log               *logan.Entry
-	chains            *config.ChainsConfig
+	chains            *chains.Config
 	tokenListProvider TokenListProvider
 	redisStore        data.RedisStore
 }
 
 type TokenListProvider interface {
-	Init(ctx context.Context, chains config.ChainsConfig) error
 	LiveLists(ctx context.Context, chainID int64) ([]pools.VersionedTokenList, error)
-	//LastKnownList(ctx context.Context, chainID int64, name string) (*data.VersionedTokenList, error)
 }
 
 func (t *tokensObserver) runOnce(ctx context.Context) error {
@@ -56,40 +54,55 @@ func (t *tokensObserver) runOnce(ctx context.Context) error {
 		}
 
 		for _, live := range liveLists {
-			lastKnown, err := t.redisStore.TokenLists().Get(ctx, c.ID, live.Name)
+			lastKnownVersion, err := t.redisStore.TokenLists().GetVersion(ctx, live.URI)
 			if err != nil {
 				return errors.Wrap(err, "failed to get last known token list", logan.F{
 					"chain_id": c.ID,
 				})
 			}
 
-			if lastKnown == nil {
-				lastKnown = &data.VersionedTokenList{
-					Version: live.Version,
-					Name:    live.Name,
-					URI:     live.URI,
+			if lastKnownVersion != nil {
+				if liveIsFresher := isVersionGreater(live.Version, *lastKnownVersion); !liveIsFresher {
+					continue
 				}
 			}
 
-			if liveIsFresher := isVersionGreater(live.Version, lastKnown.Version); !liveIsFresher {
-				continue
+			// in case lastKnownVersion is nil, we need store tokens and version
+
+			newTokens := make([]data.Token, 0, len(live.Tokens))
+
+			for _, token := range live.Tokens {
+				stored, err := t.redisStore.Tokens().Get(ctx, token.Address, token.ChainID)
+				if err != nil {
+					return errors.Wrap(err, "failed to get token", logan.F{
+						"chain_id": c.ID,
+						"address":  token.Address,
+					})
+				}
+
+				if stored == nil || stored.Name != token.Name || stored.LogoURI != token.LogoURI {
+					newTokens = append(newTokens, token)
+				}
 			}
 
-			if err = t.redisStore.Tokens().Put(ctx, live.Tokens...); err != nil {
+			if err = t.redisStore.Tokens().Put(ctx, c.ID, newTokens[:]...); err != nil {
 				return errors.Wrap(err, "failed to store tokens", logan.F{
 					"chain_id": c.ID,
 					"version":  fmt.Sprintf("%d.%d.%d", live.Version.Major, live.Version.Minor, live.Version.Patch),
 				})
 			}
 
-			if err := t.redisStore.TokenLists().Put(ctx, c.ID, *lastKnown); err != nil {
+			err = t.redisStore.TokenLists().PutURLs(ctx, c.ID, map[string]data.TokenListVersion{
+				live.URI: live.Version,
+			})
+
+			if err != nil {
 				return errors.Wrap(err, "failed to store token list", logan.F{
 					"chain_id": c.ID,
 					"version":  fmt.Sprintf("%d.%d.%d", live.Version.Major, live.Version.Minor, live.Version.Patch),
 				})
 			}
 		}
-
 	}
 
 	return nil

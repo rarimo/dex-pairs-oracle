@@ -3,38 +3,41 @@ package pools
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"net/http"
+	"time"
 
-	"github.com/go-redis/redis/v8"
+	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
+
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
+	"gitlab.com/distributed_lab/running"
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
 	redisdata "gitlab.com/rarimo/dex-pairs-oracle/internal/data/redis"
 )
 
 type TokensListProvider struct {
-	log      *logan.Entry
-	httpc    *http.Client
-	rawRedis *redis.Client
-	store    data.RedisStore
+	log   *logan.Entry
+	httpc *http.Client
+	store data.RedisStore
 }
 
-func NewTokensListProvider(log *logan.Entry, client *http.Client, redisClient *redis.Client) *TokensListProvider {
-	return &TokensListProvider{
-		log:   log,
-		httpc: client,
-		store: redisdata.NewStore(redisClient),
+func NewTokensListProvider(ctx context.Context, cfg config.Config) (*TokensListProvider, error) {
+	p := TokensListProvider{
+		log:   cfg.Log(),
+		httpc: http.DefaultClient,
+		store: cfg.RedisStore(),
 	}
+
+	return &p, p.init(ctx, cfg.ChainsCfg())
 }
 
-func (t *TokensListProvider) Init(ctx context.Context, chains config.ChainsConfig) error {
+func (t *TokensListProvider) init(ctx context.Context, chains *chains.Config) error {
 	for _, c := range chains.Chains {
-		urls := make(map[string]struct{})
+		configURLs := make(map[string]data.TokenListVersion)
 
 		for _, url := range c.TokensInfo.ListURL {
-			urls[url.String()] = struct{}{}
+			configURLs[url.String()] = data.TokenListVersion{}
 		}
 
 		storedURLs, err := t.store.TokenLists().GetURLs(ctx, c.ID)
@@ -44,22 +47,54 @@ func (t *TokensListProvider) Init(ctx context.Context, chains config.ChainsConfi
 			})
 		}
 
-		for _, url := range storedURLs {
-			urls[url] = struct{}{}
+		deleteURLs := make([]string, 0)
+
+		for _, storedURL := range storedURLs {
+			if _, ok := configURLs[storedURL]; !ok {
+				deleteURLs = append(deleteURLs, storedURL)
+				continue
+			}
+
+			version, err := t.store.TokenLists().GetVersion(ctx, storedURL)
+			if err != nil {
+				return errors.Wrap(err, "failed to get stored token list version", logan.F{
+					"chain_id": c.ID,
+					"url":      storedURL,
+				})
+			}
+
+			if version != nil {
+				configURLs[storedURL] = *version
+			}
 		}
 
-		knownURLsSlice := make([]string, 0, len(urls))
-		for url := range urls {
-			knownURLsSlice = append(knownURLsSlice, url)
-		}
+		running.UntilSuccess(ctx, t.log, "init", func(ctx context.Context) (bool, error) {
+			err = t.store.TokenLists().DeleteURLs(ctx, c.ID, deleteURLs...)
+			if err != nil {
+				if err == redisdata.ErrTxFailed {
+					return false, nil
+				}
 
-		err = t.store.TokenLists().PutURLs(ctx, c.ID, knownURLsSlice...)
-		if err != nil {
-			return errors.Wrap(err, "failed to add token list urls", logan.F{
-				"chain_id": c.ID,
-				"urls":     knownURLsSlice,
-			})
-		}
+				return false, errors.Wrap(err, "failed to delete token list urls", logan.F{
+					"chain_id": c.ID,
+					"urls":     deleteURLs,
+				})
+			}
+
+			err = t.store.TokenLists().PutURLs(ctx, c.ID, configURLs)
+			if err != nil {
+				if err == redisdata.ErrTxFailed {
+					return false, nil
+				}
+
+				return false, errors.Wrap(err, "failed to add token list urls", logan.F{
+					"chain_id": c.ID,
+					"urls":     configURLs,
+				})
+			}
+
+			return true, nil
+		}, 1*time.Second, 1*time.Second)
 	}
 
 	return nil
@@ -85,7 +120,6 @@ func (t *TokensListProvider) LiveLists(ctx context.Context, chainID int64) ([]Ve
 		}
 
 		var list VersionedTokenList
-
 		if err := json.NewDecoder(resp.Body).Decode(&list); err != nil {
 			return nil, errors.Wrap(err, "failed to decode token list", logan.F{
 				"chain_id": chainID,
@@ -93,31 +127,9 @@ func (t *TokensListProvider) LiveLists(ctx context.Context, chainID int64) ([]Ve
 			})
 		}
 
+		list.URI = url
 		lists[i] = list
 	}
 
 	return lists, nil
-}
-
-func (t *TokensListProvider) LastKnownList(ctx context.Context, chainID int64, name string) (*data.VersionedTokenList, error) {
-	tokenList, err := t.store.TokenLists().Get(ctx, chainID, name)
-	if err != nil {
-		if errors.Cause(err) == redis.Nil {
-			return nil, nil
-		}
-		return nil, errors.Wrap(err, "failed to get token list", logan.F{
-			"chain_id": chainID,
-			"name":     name,
-		})
-	}
-
-	return tokenList, nil
-}
-
-func makeChainsTokenListKey(chainID int64) string {
-	return fmt.Sprintf("chain_tokens_urls:%d", chainID)
-}
-
-func makeChainsTokenListVersionKey(chainID int64) string {
-	return fmt.Sprintf("chain_tokens_urls_version:%d", chainID)
 }

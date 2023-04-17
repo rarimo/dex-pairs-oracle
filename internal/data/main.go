@@ -28,13 +28,13 @@ type RedisStore interface {
 type TokensQ interface {
 	Get(ctx context.Context, address string, chainID int64) (*Token, error)
 	All(ctx context.Context, chain int64) ([]Token, error)
-	Put(ctx context.Context, tokens ...Token) error
+	Page(ctx context.Context, chainID int64, cursor string, limit int64) ([]Token, error)
+	Put(ctx context.Context, chainID int64, tokens ...Token) error
 }
 
 type TokenListsQ interface {
+	GetVersion(ctx context.Context, url string) (*TokenListVersion, error)
 	GetURLs(ctx context.Context, chainID int64) ([]string, error)
-	Get(ctx context.Context, chainID int64, name string) (*VersionedTokenList, error)
-
-	PutURLs(ctx context.Context, chainID int64, urls ...string) error
-	Put(ctx context.Context, chainID int64, tokenList VersionedTokenList) error
+	PutURLs(ctx context.Context, chainID int64, urlVersions map[string]TokenListVersion) error
+	DeleteURLs(ctx context.Context, chainID int64, urls ...string) error
 }
