@@ -8,7 +8,6 @@ import (
 	"strconv"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/spf13/cast"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
@@ -111,11 +110,9 @@ func (q *tokensQ) Page(ctx context.Context, chainID int64, cursor string, limit 
 	}
 
 	// zrange chain_tokens:56 ({cursor} + bylex limit 0 10
-	tokenKeysWithScores, err := q.r.ZRangeArgsWithScores(ctx, redis.ZRangeArgs{
-		Key:   setKey,
-		ByLex: true,
-		Start: start,
-		Stop:  "+",
+	tokenKeys, err := q.r.ZRangeByLex(ctx, setKey, &redis.ZRangeBy{
+		Min:   start,
+		Max:   "+",
 		Count: limit,
 	}).Result()
 	if err != nil {
@@ -124,20 +121,14 @@ func (q *tokensQ) Page(ctx context.Context, chainID int64, cursor string, limit 
 		})
 	}
 
-	if len(tokenKeysWithScores) == 0 {
+	if len(tokenKeys) == 0 {
 		return nil, nil
 	}
 
-	keys := make([]string, len(tokenKeysWithScores))
-
-	for i, tokenKeyEntry := range tokenKeysWithScores {
-		keys[i] = cast.ToString(tokenKeyEntry.Member)
-	}
-
-	rawTokens, err := q.r.MGet(ctx, keys...).Result()
+	rawTokens, err := q.r.MGet(ctx, tokenKeys...).Result()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get tokens", logan.F{
-			"keys": keys,
+			"keys": tokenKeys,
 		})
 	}
 

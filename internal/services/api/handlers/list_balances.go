@@ -25,14 +25,14 @@ type listBalancesRequest struct {
 	ChainID        int64
 	AccountAddress string
 
-	TokenAddress *string `filter:"token_address"`
-
 	IncludeChain bool `include:"chain"`
 	IncludeToken bool `include:"token"`
 
-	PageCursor uint64     `page:"cursor"`
-	PageLimit  int64      `page:"limit" default:"15"`
-	Sorts      pgdb.Sorts `url:"sort" default:"token,id"`
+	RawCursor   string `page:"cursor" default:"0x0000000000000000000000000000000000000000"`
+	TokenCursor []byte
+
+	PageLimit int64      `page:"limit" default:"15"`
+	Sorts     pgdb.Sorts `url:"sort" default:"token"`
 }
 
 func newListEvmBalancesAddress(r *http.Request) (*listBalancesRequest, error) {
@@ -58,6 +58,8 @@ func newListEvmBalancesAddress(r *http.Request) (*listBalancesRequest, error) {
 		return nil, err
 	}
 
+	req.TokenCursor = hexutil.MustDecode(req.RawCursor)
+
 	return &req, nil
 }
 
@@ -73,13 +75,11 @@ func ListEVMBalances(w http.ResponseWriter, r *http.Request) {
 	}
 
 	balances, err := Config(r).Storage().BalanceQ().SelectCtx(r.Context(), data.BalancesSelector{
-		TokenAddress:   req.TokenAddress,
 		AccountAddress: &req.AccountAddress,
 		ChainID:        &req.ChainID,
-
-		PageCursor: req.PageCursor,
-		PageSize:   uint64(req.PageLimit),
-		Sort:       req.Sorts,
+		TokenCursor:    req.TokenCursor,
+		PageSize:       uint64(req.PageLimit),
+		Sort:           req.Sorts,
 	})
 	if err != nil {
 		Log(r).WithError(err).Error("failed to select balances")
@@ -95,9 +95,7 @@ func ListEVMBalances(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	chain := Config(r).ChainsCfg().Find(req.ChainID)
-
-	tokenCursor := fmt.Sprintf("token:%d:0x0000000000000000000000000000000000000000", req.ChainID)
+	tokenCursor := fmt.Sprintf("token:%d:%s", req.ChainID, hexutil.Encode(req.TokenCursor))
 
 	if len(balances) < int(req.PageLimit) {
 		limit := req.PageLimit - int64(len(balances))
@@ -118,7 +116,6 @@ func ListEVMBalances(w http.ResponseWriter, r *http.Request) {
 			Log(r).WithError(err).WithFields(logan.F{
 				"account_address": req.AccountAddress,
 				"chain_id":        req.ChainID,
-				"token":           req.TokenAddress,
 			}).Error("failed to get balances from chain")
 			ape.RenderErr(w, problems.InternalError())
 			return
@@ -126,6 +123,8 @@ func ListEVMBalances(w http.ResponseWriter, r *http.Request) {
 
 		balances = append(balances, additionalBalances...)
 	}
+
+	chain := Config(r).ChainsCfg().Find(req.ChainID)
 
 	if req.IncludeChain {
 		chainR := chainToResource(*chain)
@@ -145,7 +144,7 @@ func ListEVMBalances(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	req.PageCursor = uint64(balances[len(balances)-1].ID)
+	req.RawCursor = hexutil.Encode(balances[len(balances)-1].Token)
 	resp.Links.Next = fmt.Sprintf("%s?%s", r.URL.Path, urlval.MustEncode(req))
 
 	ape.Render(w, resp)
@@ -154,7 +153,7 @@ func ListEVMBalances(w http.ResponseWriter, r *http.Request) {
 func balanceToResource(balance data.Balance, chain chains.Chain) resources.Balance {
 	return resources.Balance{
 		Key: resources.Key{
-			ID:   strconv.FormatInt(balance.ID, 10),
+			ID:   fmt.Sprintf("%s:%s:%s", chain.Name, hexutil.Encode(balance.Token), hexutil.Encode(balance.AccountAddress)),
 			Type: resources.BALANCES,
 		},
 		Attributes: resources.BalanceAttributes{
@@ -183,13 +182,13 @@ func balanceToResource(balance data.Balance, chain chains.Chain) resources.Balan
 	}
 }
 
-func fetchAndSaveBalances(r *http.Request, req listBalancesRequest, tokenCursor string, count int64) ([]data.Balance, error) {
-	chainBalances, err := BalancesProvider(r).GetBalances(r.Context(), req.AccountAddress, req.ChainID, tokenCursor, count)
+func fetchAndSaveBalances(r *http.Request, req listBalancesRequest, redisTokenCursor string, count int64) ([]data.Balance, error) {
+	chainBalances, err := BalancesProvider(r).GetBalances(r.Context(), req.AccountAddress, req.ChainID, redisTokenCursor, count)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get balances from chain", logan.F{
 			"account_address": req.AccountAddress,
 			"chain_id":        req.ChainID,
-			"token_cursor":    tokenCursor,
+			"token_cursor":    redisTokenCursor,
 		})
 	}
 
@@ -203,13 +202,12 @@ func fetchAndSaveBalances(r *http.Request, req listBalancesRequest, tokenCursor 
 	}
 
 	return Config(r).Storage().BalanceQ().SelectCtx(r.Context(), data.BalancesSelector{
-		TokenAddress:   req.TokenAddress,
 		AccountAddress: &req.AccountAddress,
 		ChainID:        &req.ChainID,
 
-		PageCursor: req.PageCursor,
-		PageSize:   uint64(count),
-		Sort:       req.Sorts,
+		TokenCursor: req.TokenCursor,
+		PageSize:    uint64(count),
+		Sort:        req.Sorts,
 	})
 }
 

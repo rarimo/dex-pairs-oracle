@@ -62,14 +62,14 @@ type balancesObserver struct {
 }
 
 func (b balancesObserver) runOnce(ctx context.Context) error {
-	cursor := uint64(0) // it's okay i guess (in case of big number of balances should be changed to proper cursor from redis)
+	cursor := hexutil.MustDecode("0x0000000000000000000000000000000000000000")
 
-	running.UntilSuccess(ctx, b.log, "run_once", func(ctx context.Context) (bool, error) {
+	running.UntilSuccess(ctx, b.log, "run_once_balances_observer", func(ctx context.Context) (bool, error) {
 		balances, err := b.storage.BalanceQ().SelectCtx(ctx, data.BalancesSelector{
-			PageCursor: cursor,
-			PageSize:   b.observePageSize,
+			TokenCursor: cursor,
+			PageSize:    b.observePageSize,
 			Sort: pgdb.Sorts{
-				"id",
+				"token",
 			},
 		})
 
@@ -116,7 +116,7 @@ func (b balancesObserver) runOnce(ctx context.Context) error {
 			return false, errors.Wrap(err, "failed to upsert balances")
 		}
 
-		cursor = uint64(balances[len(balances)-1].ID)
+		cursor = balances[len(balances)-1].Token
 
 		return false, nil
 	}, 1*time.Second, 5*time.Second)

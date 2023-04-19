@@ -18,13 +18,18 @@ import (
 
 func (q BalanceQ) InsertBatchCtx(ctx context.Context, balances ...data.Balance) error {
 	stmt := squirrel.Insert("public.balances").
-		Columns("account_address", "token", "chain_id",
-			"amount", "created_at", "updated_at")
+		Columns(
+			"account_address", "token", "chain_id",
+			"amount", "created_at", "updated_at",
+			"last_known_block")
 
 	for _, balance := range balances {
-		stmt = stmt.
-			Values(balance.AccountAddress, balance.Token, balance.ChainID,
-				balance.Amount, balance.CreatedAt, balance.UpdatedAt)
+		fmt.Printf("inserting balance: %d %s %s\n", balance.ChainID, hexutil.Encode(balance.Token), hexutil.Encode(balance.AccountAddress))
+
+		stmt = stmt.Values(
+			balance.AccountAddress, balance.Token, balance.ChainID,
+			balance.Amount, balance.CreatedAt, balance.UpdatedAt,
+			balance.LastKnownBlock)
 	}
 
 	return q.db.ExecContext(ctx, stmt)
@@ -32,18 +37,21 @@ func (q BalanceQ) InsertBatchCtx(ctx context.Context, balances ...data.Balance) 
 
 func (q BalanceQ) UpsertBatchCtx(ctx context.Context, balances ...data.Balance) error {
 	stmt := squirrel.Insert("public.balances").
-		Columns("account_address", "token", "chain_id",
-			"amount", "created_at", "updated_at")
+		Columns(
+			"account_address", "token", "chain_id",
+			"amount", "created_at", "updated_at",
+			"last_known_block")
 
 	for _, balance := range balances {
-		stmt = stmt.
-			Values(balance.AccountAddress, balance.Token, balance.ChainID,
-				balance.Amount, balance.CreatedAt, balance.UpdatedAt)
+		stmt = stmt.Values(
+			balance.AccountAddress, balance.Token, balance.ChainID,
+			balance.Amount, balance.CreatedAt, balance.UpdatedAt,
+			balance.LastKnownBlock)
 	}
 
 	// mitigating conflict on index problems in case balances get re-submitted
 	stmt = stmt.Suffix(
-		`ON CONFLICT(id) DO ` +
+		`ON CONFLICT(account_address,token,chain_id) DO ` +
 			`UPDATE SET ` +
 			`amount = EXCLUDED.amount, updated_at = EXCLUDED.updated_at`)
 
@@ -73,20 +81,16 @@ func applyBalancesSelector(stmt squirrel.SelectBuilder, selector data.BalancesSe
 		stmt = stmt.Where(squirrel.Eq{"account_address": hexutil.MustDecode(*selector.AccountAddress)})
 	}
 
-	if selector.TokenAddress != nil {
-		stmt = stmt.Where(squirrel.Eq{"token": hexutil.MustDecode(*selector.TokenAddress)})
-	}
-
-	stmt = applyBalancesPagination(stmt, selector.Sort, selector.PageCursor, selector.PageSize)
+	stmt = applyBalancesPagination(stmt, selector.Sort, selector.TokenCursor, selector.PageSize)
 
 	return stmt
 }
 
-func applyBalancesPagination(stmt squirrel.SelectBuilder, sorts pgdb.Sorts, cursor, limit uint64) squirrel.SelectBuilder {
+func applyBalancesPagination(stmt squirrel.SelectBuilder, sorts pgdb.Sorts, tokenCursor []byte, limit uint64) squirrel.SelectBuilder {
 	stmt = stmt.Limit(limit)
 
 	if len(sorts) == 0 {
-		sorts = pgdb.Sorts{"token", "id"}
+		sorts = pgdb.Sorts{"token"}
 	}
 
 	stmtSorts := pgdb.Sorts{"token"}
@@ -99,18 +103,17 @@ func applyBalancesPagination(stmt squirrel.SelectBuilder, sorts pgdb.Sorts, curs
 	}
 
 	stmt = sorts.ApplyTo(stmt, map[string]string{
-		"id":    "id",
 		"token": "token",
 		"time":  "created_at",
 	})
 
-	if cursor != 0 {
+	if len(tokenCursor) != 0 {
 		comp := ">" // default to ascending order
 		if sortDesc := strings.HasPrefix(string(sorts[0]), "-"); sortDesc {
 			comp = "<"
 		}
 
-		stmt = stmt.Where(fmt.Sprintf("id %s ?", comp), cursor)
+		stmt = stmt.Where(fmt.Sprintf("token %s ?", comp), tokenCursor)
 	}
 
 	return stmt
