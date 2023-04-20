@@ -2,7 +2,6 @@ package ethbalances
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -41,9 +40,6 @@ func (p *Provider) GetBalances(ctx context.Context, address string, chainID int6
 	accountAddr := common.HexToAddress(address)
 
 	for i, token := range tokens {
-		if token.Address == "0x9CEFd9588f076c5f805341864adC8a6F077A5b99" {
-			fmt.Println("bup")
-		}
 		tokenAddr := common.HexToAddress(token.Address)
 
 		amount, block, err := p.amounter.Amount(ctx, chainID, tokenAddr, accountAddr)
