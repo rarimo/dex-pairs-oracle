@@ -44,3 +44,22 @@ chains:
             symbol: "FOOBAR"
             decimals: 18
             logo_uri: "https://ps.w.org/foobar-notifications-lite/assets/icon-256x256.gif"
+    - id: 43114
+      name: "Avalanche"
+      rpc_url: "https://api.avax.network/ext/bc/C/rpc"
+      native_symbol: AVAX
+      explorer_url: "https://snowtrace.io"
+      type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
+      kind: "testnet"
+      icon_url: "https://raw.githubusercontent.com/MetaMask/metamask-extension/develop/app/images/avax-token.png"
+      swap_contract_address: "0x2021Fa349Ec57F33F03961E430f54d9b05781E3c"
+      swap_contract_version: "TraderJoe"
+      tokens_info:
+        list_urls:
+          - "https://raw.githubusercontent.com/traderjoe-xyz/joe-tokenlists/main/mc.tokenlist.json"
+        tokens:
+          - address: "0x183A7d78c6d0B8211351954CDEA8c7c00CAE2470"
+            name: "FooBar Token"
+            symbol: "FOOBAR"
+            decimals: 18
+            logo_uri: "https://ps.w.org/foobar-notifications-lite/assets/icon-256x256.gif"

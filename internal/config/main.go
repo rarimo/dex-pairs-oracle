@@ -26,7 +26,6 @@ type Config interface {
 	NewStorage() data.Storage
 	Storage() data.Storage
 	RedisStore() data.RedisStore
-	EVM() *evmConfig
 	BalancesObserver() *BalancesObserverConfig
 	TokensObserver() *TokensObserverConfig
 	EthBalancesProvider() *ethbalances.Provider
@@ -40,7 +39,6 @@ type config struct {
 	rd.Rediser
 
 	chains              comfig.Once
-	evm                 comfig.Once
 	balancesObserver    comfig.Once
 	tokensObserver      comfig.Once
 	ethBalancesProvider comfig.Once
