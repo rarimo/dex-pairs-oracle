@@ -64,8 +64,8 @@ func (p *Provider) Amount(ctx context.Context, chainID int64, token common.Addre
 		return balance, block.Number(), nil
 	}
 
-	contract := p.contracts[token]
-	if contract == nil {
+	contract, ok := p.contracts[token]
+	if !ok {
 		erc20, err := bind.NewERC20Caller(token, ethc)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "failed to init erc20 caller", logan.F{

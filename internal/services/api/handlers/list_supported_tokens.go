@@ -11,7 +11,6 @@ import (
 	"gitlab.com/distributed_lab/ape/problems"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
 	"gitlab.com/rarimo/dex-pairs-oracle/resources"
 )
 
@@ -70,7 +69,7 @@ func ListSupportedEVMTokens(w http.ResponseWriter, r *http.Request) {
 	ape.Render(w, resp)
 }
 
-func tokenToResource(token data.Token) resources.Token {
+func tokenToResource(token chains.TokenInfo) resources.Token {
 	tresource := resources.Token{
 		Key: resources.Key{
 			ID:   token.Address,

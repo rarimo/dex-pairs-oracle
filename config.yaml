@@ -39,9 +39,8 @@ chains:
           - "https://tokens.pancakeswap.finance/pancakeswap-extended.json"
           - "https://raw.githubusercontent.com/pancakeswap/token-list/main/lists/cmc.json"
         tokens:
-          - chain_id: 97
-            address: "0x8BaBbB98678facC7342735486C851ABD7A0d17Ca"
-            name: "Ethereum Token"
-            symbol: "ETH"
+          - address: "0x183A7d78c6d0B8211351954CDEA8c7c00CAE2470"
+            name: "FooBar Token"
+            symbol: "FOOBAR"
             decimals: 18
-            logo_uri: "https://raw.githubusercontent.com/MetaMask/metamask-extension/develop/app/images/eth_logo.svg"
+            logo_uri: "https://ps.w.org/foobar-notifications-lite/assets/icon-256x256.gif"

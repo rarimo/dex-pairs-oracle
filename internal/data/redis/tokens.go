@@ -5,62 +5,42 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
-	"strconv"
+
+	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
 
 	"github.com/go-redis/redis/v8"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
 )
 
 type tokensQ struct {
 	r *redis.Client
 }
 
-func (q *tokensQ) Put(ctx context.Context, chainID int64, tokens ...data.Token) error {
+func (q *tokensQ) Put(ctx context.Context, chainID int64, tokens ...chains.TokenInfo) error {
 	setKey := makeChainTokensKey(chainID)
-
-	//currentSize, err := q.r.ZCard(ctx, setKey).Result()
-	//if err != nil {
-	//	return errors.Wrap(err, "failed to get chain tokens set size", logan.F{
-	//		"key": setKey,
-	//	})
-	//}
 
 	members := make([]redis.Z, len(tokens))
 
 	for i, t := range tokens {
-		if t.ChainID != chainID {
-			return errors.From(errors.New("token chain id doesn't match chain id"), logan.F{
-				"token_addr":     t.Address,
-				"token_chain_id": t.ChainID,
-				"chain_id":       chainID,
-			})
-		}
-
-		tokenCursor := int64(1) // + currentSize + int64(i)
-		t.Cursor = strconv.FormatInt(tokenCursor, 10)
-
 		encoded, err := json.Marshal(t)
 		if err != nil {
 			return errors.Wrap(err, "failed to marshal token", logan.F{
-				"address":  t.Address,
-				"chain_id": t.ChainID,
+				"address": t.Address,
 			})
 		}
 
-		tk := makeTokenKey(t.Address, t.ChainID)
+		tk := makeTokenKey(t.Address, chainID)
 
 		err = q.r.Set(ctx, tk, encoded, 0).Err()
 		if err != nil {
 			return errors.Wrap(err, "failed to set token", logan.F{
-				"address":  t.Address,
-				"chain_id": t.ChainID,
+				"key": tk,
 			})
 		}
 
 		members[i] = redis.Z{
-			Score:  float64(tokenCursor),
+			Score:  float64(1),
 			Member: tk,
 		}
 	}
@@ -71,7 +51,7 @@ func (q *tokensQ) Put(ctx context.Context, chainID int64, tokens ...data.Token) 
 	}).Err()
 }
 
-func (q *tokensQ) Get(ctx context.Context, address string, chainID int64) (*data.Token, error) {
+func (q *tokensQ) Get(ctx context.Context, address string, chainID int64) (*chains.TokenInfo, error) {
 	key := makeTokenKey(address, chainID)
 
 	raw, err := q.r.Get(ctx, key).Result()
@@ -90,7 +70,7 @@ func (q *tokensQ) Get(ctx context.Context, address string, chainID int64) (*data
 		return nil, nil
 	}
 
-	var token data.Token
+	var token chains.TokenInfo
 	err = json.Unmarshal([]byte(raw), &token)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal token", logan.F{
@@ -101,7 +81,7 @@ func (q *tokensQ) Get(ctx context.Context, address string, chainID int64) (*data
 	return &token, nil
 }
 
-func (q *tokensQ) Page(ctx context.Context, chainID int64, cursor string, limit int64) ([]data.Token, error) {
+func (q *tokensQ) Page(ctx context.Context, chainID int64, cursor string, limit int64) ([]chains.TokenInfo, error) {
 	setKey := makeChainTokensKey(chainID)
 
 	start := "-"
@@ -132,7 +112,7 @@ func (q *tokensQ) Page(ctx context.Context, chainID int64, cursor string, limit 
 		})
 	}
 
-	tokens := make([]data.Token, len(rawTokens))
+	tokens := make([]chains.TokenInfo, len(rawTokens))
 	for i, raw := range rawTokens {
 		rawS, ok := raw.(string)
 		if !ok {
@@ -141,7 +121,7 @@ func (q *tokensQ) Page(ctx context.Context, chainID int64, cursor string, limit 
 			})
 		}
 
-		var token data.Token
+		var token chains.TokenInfo
 		err = json.Unmarshal([]byte(rawS), &token)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to unmarshal token", logan.F{
@@ -160,7 +140,7 @@ func (q *tokensQ) Page(ctx context.Context, chainID int64, cursor string, limit 
 	return tokens, nil
 }
 
-func (q *tokensQ) All(ctx context.Context, chain int64) ([]data.Token, error) {
+func (q *tokensQ) All(ctx context.Context, chain int64) ([]chains.TokenInfo, error) {
 	tokenKeys, err := q.r.SMembers(ctx, makeChainTokensKey(chain)).Result()
 	if err != nil {
 		if errors.Cause(err) == redis.Nil {
@@ -176,7 +156,7 @@ func (q *tokensQ) All(ctx context.Context, chain int64) ([]data.Token, error) {
 		return nil, nil
 	}
 
-	tokens := make([]data.Token, len(tokenKeys))
+	tokens := make([]chains.TokenInfo, len(tokenKeys))
 	for i, key := range tokenKeys {
 		raw, err := q.r.Get(ctx, key).Result()
 		if err != nil {
@@ -189,7 +169,7 @@ func (q *tokensQ) All(ctx context.Context, chain int64) ([]data.Token, error) {
 			})
 		}
 
-		var token data.Token
+		var token chains.TokenInfo
 		err = json.Unmarshal([]byte(raw), &token)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to unmarshal token", logan.F{

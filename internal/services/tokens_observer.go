@@ -46,6 +46,31 @@ type TokenListProvider interface {
 
 func (t *tokensObserver) runOnce(ctx context.Context) error {
 	for _, c := range t.chains.Chains {
+		preConfiguredTokens := make([]chains.TokenInfo, 0, len(c.TokensInfo.Tokens))
+		for _, token := range c.TokensInfo.Tokens {
+			existing, err := t.redisStore.Tokens().Get(ctx, token.Address, c.ID)
+			if err != nil {
+				t.log.WithError(err).WithFields(logan.F{
+					"address":  token.Address,
+					"chain_id": c.ID,
+				}).Error("failed to get token from redis")
+			}
+
+			if existing != nil {
+				continue
+			}
+
+			preConfiguredTokens = append(preConfiguredTokens, token)
+		}
+
+		if len(preConfiguredTokens) != 0 {
+			err := t.redisStore.Tokens().Put(ctx, c.ID, preConfiguredTokens...)
+			if err != nil {
+				return errors.Wrap(err, "failed to store pre-configured tokens", logan.F{
+					"chain_id": c.ID,
+				})
+			}
+		}
 		liveLists, err := t.tokenListProvider.LiveLists(ctx, c.ID)
 		if err != nil {
 			return errors.Wrap(err, "failed to get live token list", logan.F{
@@ -69,7 +94,7 @@ func (t *tokensObserver) runOnce(ctx context.Context) error {
 
 			// in case lastKnownVersion is nil, we need store tokens and version
 
-			newTokens := make([]data.Token, 0, len(live.Tokens))
+			newTokens := make([]chains.TokenInfo, 0, len(live.Tokens))
 
 			for _, token := range live.Tokens {
 				stored, err := t.redisStore.Tokens().Get(ctx, token.Address, token.ChainID)
@@ -81,7 +106,7 @@ func (t *tokensObserver) runOnce(ctx context.Context) error {
 				}
 
 				if stored == nil || stored.Name != token.Name || stored.LogoURI != token.LogoURI {
-					newTokens = append(newTokens, token)
+					newTokens = append(newTokens, token.TokenInfo)
 				}
 			}
 

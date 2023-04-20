@@ -67,8 +67,8 @@ type TokensInfo struct {
 type TokenInfo struct {
 	Name     string `json:"name" fig:"name"`
 	Symbol   string `json:"symbol" fig:"symbol"`
-	ChainID  int64  `json:"chainId" fig:"chain_id"`
 	Address  string `json:"address" fig:"address"`
 	Decimals int64  `json:"decimals" fig:"decimals"`
 	LogoURI  string `json:"logoURI" fig:"logo_uri"`
+	Native   bool   `json:"native" fig:"native"`
 }
