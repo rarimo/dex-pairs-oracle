@@ -109,7 +109,7 @@ func (q *tokensQ) Page(ctx context.Context, chainID int64, cursor string, limit 
 		start = fmt.Sprintf("(%s", cursor)
 	}
 
-	// zrange chain_tokens:56 ({cursor} + bylex limit 0 10
+	// zrange chain_tokens:56 ({cursor} + bylex limit 0 {limit}
 	tokenKeys, err := q.r.ZRangeByLex(ctx, setKey, &redis.ZRangeBy{
 		Min:   start,
 		Max:   "+",

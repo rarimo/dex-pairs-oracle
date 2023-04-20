@@ -53,7 +53,7 @@ func (q BalanceQ) UpsertBatchCtx(ctx context.Context, balances ...data.Balance) 
 	stmt = stmt.Suffix(
 		`ON CONFLICT(account_address,token,chain_id) DO ` +
 			`UPDATE SET ` +
-			`amount = EXCLUDED.amount, updated_at = EXCLUDED.updated_at`)
+			`amount = EXCLUDED.amount, updated_at = EXCLUDED.updated_at, last_known_block = EXCLUDED.last_known_block`)
 
 	return q.db.ExecContext(ctx, stmt)
 }
@@ -103,8 +103,9 @@ func applyBalancesPagination(stmt squirrel.SelectBuilder, sorts pgdb.Sorts, toke
 	}
 
 	stmt = sorts.ApplyTo(stmt, map[string]string{
-		"token": "token",
-		"time":  "created_at",
+		"token":  "token",
+		"time":   "created_at",
+		"amount": "amount",
 	})
 
 	if len(tokenCursor) != 0 {

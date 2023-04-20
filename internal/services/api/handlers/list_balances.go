@@ -3,8 +3,10 @@ package handlers
 import (
 	"context"
 	"fmt"
+	"math/big"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/go-chi/chi"
@@ -104,6 +106,7 @@ func ListEVMBalances(w http.ResponseWriter, r *http.Request) {
 			tokenCursor = fmt.Sprintf("token:%d:%s", req.ChainID, string(balances[len(balances)-1].Token))
 		}
 
+		// balances we need rn to fill the page
 		additionalBalances, err := fetchAndSaveBalances(r, *req, tokenCursor, limit)
 		if err != nil {
 			if cerr := errors.Cause(err); cerr == etherrors.ErrChainNotSupported {
@@ -122,6 +125,21 @@ func ListEVMBalances(w http.ResponseWriter, r *http.Request) {
 		}
 
 		balances = append(balances, additionalBalances...)
+
+		// balance dummies that will later be populated by balances_observer
+		// (inserting them to make furhter requests faster)
+		balanceDummies, err := makeBalancesDummies(r, req.ChainID, req.AccountAddress, 5*req.PageLimit)
+		if err != nil {
+			// we already have all the things we need for the user so
+			// just log it here to be aware if something is wrong with db/redis connection
+			Log(r).WithError(err).Warn("failed to make balance dummies")
+		}
+
+		err = Config(r).Storage().BalanceQ().InsertBatchCtx(r.Context(), balanceDummies...)
+		if err != nil {
+			// same here
+			Log(r).WithError(err).Warn("failed to insert balance dummies")
+		}
 	}
 
 	chain := Config(r).ChainsCfg().Find(req.ChainID)
@@ -180,6 +198,67 @@ func balanceToResource(balance data.Balance, chain chains.Chain) resources.Balan
 			},
 		},
 	}
+}
+
+// hack to make further requests faster
+// most probably many of user's balances are of zero amount
+// so we can simply pre-populate them now and
+// let the balances observer will make all the rest
+// in case user has non-zero balances - balances_observer will update them in a short while
+func makeBalancesDummies(r *http.Request, chainID int64, accountAddress string, number int64) ([]data.Balance, error) {
+	lastBalance, err := Config(r).Storage().BalanceQ().SelectCtx(r.Context(), data.BalancesSelector{
+		AccountAddress: &accountAddress,
+		ChainID:        &chainID,
+		PageSize:       1,
+		Sort: pgdb.Sorts{
+			"-token",
+		},
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get last balance")
+	}
+
+	if len(lastBalance) == 0 {
+		Log(r).WithFields(logan.F{
+			"account_address": accountAddress,
+			"chain_id":        chainID,
+		}).Debug("no balances found for account")
+		return nil, nil
+	}
+
+	tokens, err := Config(r).RedisStore().Tokens().Page(r.Context(),
+		chainID,
+		fmt.Sprintf("token:%d:%s", chainID, hexutil.Encode(lastBalance[0].Token)),
+		number)
+	if err != nil {
+		Log(r).WithError(err).Warn("failed to get tokens")
+		return nil, errors.Wrap(err, "failed to get tokens")
+	}
+
+	if len(tokens) == 0 {
+		Log(r).WithFields(logan.F{
+			"account_address": accountAddress,
+			"chain_id":        chainID,
+			"cursor":          hexutil.Encode(lastBalance[0].Token),
+		}).Debug("no tokens left for creating dummies")
+		return nil, nil
+	}
+
+	now := time.Now()
+
+	balances := make([]data.Balance, 0, len(tokens))
+	for _, token := range tokens {
+		balances = append(balances, data.Balance{
+			AccountAddress: hexutil.MustDecode(accountAddress),
+			ChainID:        chainID,
+			Token:          hexutil.MustDecode(token.Address),
+			Amount:         data.Int256{big.NewInt(0)},
+			CreatedAt:      now,
+			UpdatedAt:      now,
+		})
+	}
+
+	return balances, nil
 }
 
 func fetchAndSaveBalances(r *http.Request, req listBalancesRequest, redisTokenCursor string, count int64) ([]data.Balance, error) {
