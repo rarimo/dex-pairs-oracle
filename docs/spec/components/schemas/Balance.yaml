@@ -1,5 +1,5 @@
 allOf:
-  - $ref: '#/components/schemas/ChainKey'
+  - $ref: '#/components/schemas/BalanceKey'
   - type: object
     required:
       - attributes

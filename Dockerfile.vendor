@@ -1,0 +1,22 @@
+FROM golang:1.19-alpine as buildbase
+
+WORKDIR /go/src/gitlab.com/rarimo/dex-pairs-oracle
+COPY vendor .
+COPY . .
+
+ENV GO111MODULE="on"
+ENV CGO_ENABLED=0
+ENV GOOS="linux"
+
+RUN go build -o /usr/local/bin/dex-pairs-oracle gitlab.com/rarimo/dex-pairs-oracle
+
+###
+
+FROM alpine:3.9 as calpine
+
+RUN apk add --no-cache ca-certificates
+
+FROM calpine
+
+COPY --from=buildbase /usr/local/bin/dex-pairs-oracle /usr/local/bin/dex-pairs-oracle
+ENTRYPOINT ["dex-pairs-oracle"]
