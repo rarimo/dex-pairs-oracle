@@ -2,6 +2,7 @@ package chains
 
 import (
 	"net/url"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	tokenmanager "gitlab.com/rarimo/rarimo-core/x/tokenmanager/types"
@@ -21,6 +22,7 @@ type Kind string
 const (
 	KindTestnet Kind = "testnet"
 	KindMainnet Kind = "mainnet"
+	KindOther   Kind = "other"
 )
 
 type Config struct {
@@ -29,7 +31,7 @@ type Config struct {
 
 func (c Config) FindByName(name string) *Chain {
 	for _, chain := range c.Chains {
-		if chain.Name == name {
+		if strings.ToLower(chain.Name) == name {
 			return &chain
 		}
 	}

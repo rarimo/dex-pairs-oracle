@@ -38,12 +38,8 @@ allOf:
             format: ChainKind
             description: "The kind of the chain"
             enum:
-              - name: testnet
-                value: 0
-              - name: mainnet
-                value: 1
-              - name: other # for example, a private network or devnet
-                value: 2
+              - "testnet"
+              - "mainnet"
           rpc:
             type: string
             example: "https://bsc-dataseed.binance.org/"

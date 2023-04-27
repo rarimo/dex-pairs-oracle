@@ -38,26 +38,28 @@ type listBalancesRequest struct {
 }
 
 func newListEvmBalancesAddress(r *http.Request) (*listBalancesRequest, error) {
-	chainID, err := strconv.ParseInt(chi.URLParam(r, "chain_id"), 10, 64)
-	if err != nil {
-		return nil, validation.Errors{
-			"chain_id": err,
-		}
-	}
+	chainName := chi.URLParam(r, "chain_name")
 
-	if supported := Config(r).ChainsCfg().Find(chainID); supported == nil {
+	supported := Config(r).ChainsCfg().FindByName(chainName)
+	if supported == nil {
 		return nil, validation.Errors{
-			"chain_id": fmt.Errorf("chain %d is not supported", chainID),
+			"chain_name": fmt.Errorf("chain [%s] is not supported", chainName),
 		}
 	}
 
 	req := listBalancesRequest{
-		ChainID:        chainID,
+		ChainID:        supported.ID,
 		AccountAddress: chi.URLParam(r, "account_address"),
 	}
 
 	if err := urlval.Decode(r.URL.Query(), &req); err != nil {
 		return nil, err
+	}
+
+	if req.PageLimit < 1 || req.PageLimit > 100 {
+		return nil, validation.Errors{
+			"page[limit]": errors.New("should be in the range [1; 100]"),
+		}
 	}
 
 	req.TokenCursor = hexutil.MustDecode(req.RawCursor)

@@ -19,7 +19,7 @@ type listSupportedTokensRequest struct {
 }
 
 func newListSupportedTokensRequest(r *http.Request) (*listSupportedTokensRequest, error) {
-	chainName := chi.URLParam(r, "chain")
+	chainName := chi.URLParam(r, "chain_name")
 
 	chain := Config(r).ChainsCfg().FindByName(strings.ToLower(chainName))
 	if chain == nil {

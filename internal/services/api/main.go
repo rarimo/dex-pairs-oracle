@@ -29,7 +29,7 @@ func Run(ctx context.Context, cfg config.Config) {
 		r.Route("/chains", func(r chi.Router) {
 			r.Get("/", handlers.ListSupportedChain)
 			r.Route("/evm", func(r chi.Router) {
-				r.Route("/{chain_id}", func(r chi.Router) {
+				r.Route("/{chain_name}", func(r chi.Router) {
 					r.Get("/tokens", handlers.ListSupportedEVMTokens)
 					r.Get("/{account_address}/balances", handlers.ListEVMBalances)
 				})

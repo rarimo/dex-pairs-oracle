@@ -34,7 +34,7 @@ func newListSupportedChainRequest(r *http.Request) (*listSupportedChainRequest, 
 func validateListSupportedChainRequest(req listSupportedChainRequest) error {
 	return validation.Errors{
 		"filter[type]": validation.Validate(req.Type, validation.In(append(resources.SupportedChainTypes(), nil)...)),
-		"filter[kind]": validation.Validate(req.Kind, validation.In(chains.KindTestnet, chains.KindMainnet)),
+		"filter[kind]": validation.Validate(req.Kind, validation.In(chains.KindTestnet, chains.KindMainnet, chains.KindOther)),
 	}.Filter()
 }
 

@@ -23,7 +23,7 @@ func (q BalanceQ) InsertBatchCtx(ctx context.Context, balances ...data.Balance) 
 			"amount", "created_at", "updated_at",
 			"last_known_block")
 
-
+	for _, balance := range balances {
 		stmt = stmt.Values(
 			balance.AccountAddress, balance.Token, balance.ChainID,
 			balance.Amount, balance.CreatedAt, balance.UpdatedAt,
@@ -100,7 +100,7 @@ func applyBalancesPagination(stmt squirrel.SelectBuilder, sorts pgdb.Sorts, toke
 		stmtSorts = append(stmtSorts, sort)
 	}
 
-	stmt = sorts.ApplyTo(stmt, map[string]string{
+	stmt = sorts.ApplyTo(stmt, map[string]string{ // TODO move it kinda closer to the handler's request model
 		"token":  "token",
 		"time":   "created_at",
 		"amount": "amount",

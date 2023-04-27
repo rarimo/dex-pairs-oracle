@@ -16,8 +16,11 @@ get:
       description: Filter chains by kind (testnet/mainnet)
       required: false
       schema:
-        type: integer
-        example: 0
+        type: string
+        example: "mainnet"
+        enum:
+          - "testnet"
+          - "mainnet"
   responses:
     '200':
       description: OK

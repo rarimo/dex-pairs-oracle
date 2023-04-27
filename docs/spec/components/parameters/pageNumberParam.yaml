@@ -1,6 +1,6 @@
 in: query
-name: 'page[number]'
+name: 'page[cursor]'
 required: false
 schema:
   type: integer
-description: The number of a page to return.
+description: The cursor papameter for the pagination.
