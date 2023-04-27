@@ -23,8 +23,6 @@ func (q BalanceQ) InsertBatchCtx(ctx context.Context, balances ...data.Balance) 
 			"amount", "created_at", "updated_at",
 			"last_known_block")
 
-	for _, balance := range balances {
-		fmt.Printf("inserting balance: %d %s %s\n", balance.ChainID, hexutil.Encode(balance.Token), hexutil.Encode(balance.AccountAddress))
 
 		stmt = stmt.Values(
 			balance.AccountAddress, balance.Token, balance.ChainID,
