@@ -1,0 +1,12 @@
+type: object
+required:
+  - id
+  - type
+properties:
+  id:
+    type: string
+    example: "Goerli:0x25E9d05365c867E59C1904E7463Af9F312296f9E"
+  type:
+    type: string
+    enum:
+      - tokens

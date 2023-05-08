@@ -1,0 +1,6 @@
+in: query
+name: 'page[cursor]'
+required: false
+schema:
+  type: integer
+description: The cursor papameter for the pagination.

@@ -1,0 +1,54 @@
+allOf:
+  - $ref: '#/components/schemas/ChainKey'
+  - type: object
+    required:
+      - attributes
+    properties:
+      attributes:
+        type: object
+        required:
+          - name
+          - type
+          - kind
+          - rpc
+          - icon
+          - swap_contract_address
+          - swap_contract_version
+        properties:
+          name:
+            type: string
+            example: "BSC"
+          type:
+            allOf:
+              - $ref: '#/components/schemas/Enum'
+            format: ChainType
+            description: "The type of the chain"
+            enum:
+              - name: evm
+                value: 0
+              - name: solana
+                value: 1
+              - name: near
+                value: 2
+              - name: other
+                value: 3
+          kind:
+            allOf:
+              - $ref: '#/components/schemas/Enum'
+            format: ChainKind
+            description: "The kind of the chain"
+            enum:
+              - "testnet"
+              - "mainnet"
+          rpc:
+            type: string
+            example: "https://bsc-dataseed.binance.org/"
+          icon:
+            type: string
+            example: "https://raw.githubusercontent.com/MetaMask/metamask-extension/develop/app/images/bnb.png"
+          swap_contract_address:
+            type: string
+            example: "0x85718348D854CE2768e96D87a2ed6d12d619b67B"
+          swap_contract_version:
+            type: string
+            example: "PancakeSwap"

@@ -1,0 +1,12 @@
+type: object
+required:
+  - id
+  - type
+properties:
+  id:
+    type: string
+    example: "Goerli:0xfddac11e0072e3377775345d58de0dc88a964837"
+  type:
+    type: string
+    enum:
+      - accounts

@@ -1,0 +1,73 @@
+get:
+  tags:
+    - Balances
+  summary: Get list of balances
+  operationId: getBalancesList
+  parameters:
+    - in: path
+      name: 'chain_name'
+      description: Chain name to get balances for
+      required: true
+      schema:
+        type: string
+        example: "Goerli"
+    - in: path
+      name: 'account_address'
+      description: Account address to get balances for
+      required: true
+      schema:
+          type: string
+          example: "0xfddac11e0072e3377775345d58de0dc88a964837"
+    - in: query
+      name: "page[cursor]"
+      description: "Case-sensitive hex cursor to start searching balances from (balances are sorted in alphabetical order by the token address)"
+      required: false
+      schema:
+        type: string
+        example: "0x0E09FaBB73Bd3Ade0a17ECC321fD13a19e81cE82"
+        default: "0x0000000000000000000000000000000000000000"
+    - in: query
+      name: "page:[limit]"
+      description: "Number of balances on page"
+      required: false
+      schema:
+        type: integer
+        example: 100
+        default: 15
+        minimum: 1
+        maximum: 100
+    - in: query
+      name: "sort"
+      description: "Sorting order"
+      required: false
+      schemas:
+        type: string
+        example: "-token"
+        enum:
+          - "token"
+          - "-token"
+        default: "token"
+  responses:
+    '200':
+      description: OK
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Balance'
+              include:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/Chain'
+                    - $ref: '#/components/schemas/Token'
+    '400':
+      $ref: '#/components/responses/invalidParameter.yaml'
+    '500':
+      $ref: '#/components/responses/internalError.yaml'

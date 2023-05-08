@@ -1,0 +1,31 @@
+allOf:
+  - $ref: '#/components/schemas/TokenKey'
+  - type: object
+    required:
+      - attributes
+    properties:
+      attributes:
+        type: object
+        required:
+          - name
+          - symbol
+          - decimals
+          - logo_uri
+        properties:
+          name:
+            type: string
+            example: "Atletico de Madrid"
+          symbol:
+            type: string
+            example: "ATM"
+          decimals:
+            type: integer
+            format: int64
+            example: 2
+          logo_uri:
+            type: string
+            example: "https://tokens.pancakeswap.finance/images/0x25E9d05365c867E59C1904E7463Af9F312296f9E.png"
+          native:
+            type: boolean
+            example: false
+

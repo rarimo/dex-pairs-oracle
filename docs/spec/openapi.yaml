@@ -1,0 +1,8 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: dex-pairs-oracle
+  description: ''
+servers:
+  - url: 'https://devnet.rarimo.com'
+    description: Rarimo Developer Environment

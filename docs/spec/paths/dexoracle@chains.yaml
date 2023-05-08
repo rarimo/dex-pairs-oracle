@@ -1,0 +1,41 @@
+get:
+  tags:
+    - Chains
+  summary: Get list of chains supported for liquidity pools monitoring
+  operationId: getChainList
+  parameters:
+    - in: query
+      name: 'filter[type]'
+      description: Filter chains by type (evm/solana/near)
+      required: false
+      schema:
+        type: integer
+        example: 0
+    - in: query
+      name: 'filter[kind]'
+      description: Filter chains by kind (testnet/mainnet)
+      required: false
+      schema:
+        type: string
+        example: "mainnet"
+        enum:
+          - "testnet"
+          - "mainnet"
+  responses:
+    '200':
+      description: OK
+      content:
+        application/vnd.api+json:
+          schema:
+            type: object
+            required:
+              - data
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Chain'
+    '400':
+      $ref: '#/components/responses/invalidParameter.yaml'
+    '500':
+      $ref: '#/components/responses/internalError.yaml'
