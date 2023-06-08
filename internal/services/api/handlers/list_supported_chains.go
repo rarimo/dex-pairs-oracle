@@ -87,7 +87,7 @@ func chainToResource(chain chains.Chain) resources.Chain {
 	}
 
 	for _, token := range chain.TokensInfo.Tokens {
-		if token.Native {
+		if token.Native || token.Symbol == chain.NativeSymbol {
 			c.Attributes.NativeToken = resources.NativeTokenInfo{
 				Symbol:   token.Symbol,
 				Name:     token.Name,
