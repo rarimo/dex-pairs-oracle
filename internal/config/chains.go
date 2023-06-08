@@ -1,6 +1,7 @@
 package config
 
 import (
+	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
 
 	"gitlab.com/distributed_lab/figure/v3"
@@ -23,6 +24,32 @@ func (c *config) ChainsCfg() *chains.Config {
 			panic(errors.Wrap(err, "failed to figure out "+cfgName))
 		}
 
+		if err := validateChains(cfg); err != nil {
+			panic(errors.Wrap(err, "failed to validate "+cfgName))
+		}
+
 		return &cfg
 	}).(*chains.Config)
+}
+
+func validateChains(cfg chains.Config) error {
+	for _, chain := range cfg.Chains {
+		if chain.NativeSymbol == "" {
+			return errors.From(errors.New("native symbol is required"), logan.F{
+				"chain": chain.Name,
+			})
+		}
+
+		for _, tokenInfo := range chain.TokensInfo.Tokens {
+			if tokenInfo.Symbol == chain.NativeSymbol {
+				continue
+			}
+		}
+
+		return errors.From(errors.New("native token is not configured in tokens"), logan.F{
+			"chain": chain.Name,
+		})
+	}
+
+	return nil
 }

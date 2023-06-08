@@ -82,6 +82,8 @@ func chainToResource(chain chains.Chain) resources.Chain {
 			SwapContractAddress: chain.SwapContractAddr.String(),
 			SwapContractVersion: string(chain.SwapContractVersion),
 			Type:                chainTypeToResource(chain.Type),
+			ExplorerUrl:         chain.ExplorerURL,
+			NativeSymbol:        chain.NativeSymbol,
 		},
 	}
 }
