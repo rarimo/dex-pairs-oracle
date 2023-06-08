@@ -30,8 +30,9 @@ type Config struct {
 }
 
 func (c Config) FindByName(name string) *Chain {
+	lname := strings.ToLower(name)
 	for _, chain := range c.Chains {
-		if strings.ToLower(chain.Name) == name {
+		if strings.ToLower(chain.Name) == lname {
 			return &chain
 		}
 	}
