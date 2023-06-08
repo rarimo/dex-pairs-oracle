@@ -32,6 +32,13 @@ chains:
       swap_contract_address: "0x85718348D854CE2768e96D87a2ed6d12d619b67B"
       swap_contract_version: "UniswapV3"
       tokens_info:
+        tokens:
+          - address: "0x0000000000000000000000000000000000000000"
+            name: "Ethereum Native Currency"
+            symbol: "ETH"
+            decimals: 18
+            logo_uri: "TODO Semёn" TODODODOOD
+            native: true
         list_urls:
           - "https://ipfs.io/ipns/tokens.uniswap.org"
           - "https://tokens.coingecko.com/uniswap/all.json"
@@ -46,6 +53,13 @@ chains:
       swap_contract_address: "0xe3C6b16AFAB73D836f12252f376613ceF967B5e1"
       swap_contract_version: "UniswapV3"
       tokens_info:
+        tokens:
+          - address: "0x0000000000000000000000000000000000000000"
+            name: "Goerli Ethereum"
+            symbol: "ETH"
+            decimals: 18
+            logo_uri: "TODO Semёn" TODODODOOD
+            native: true
         list_urls:
           - "https://ipfs.io/ipns/tokens.uniswap.org"
     - id: 11155111
@@ -58,6 +72,13 @@ chains:
       icon_url: "https://raw.githubusercontent.com/MetaMask/metamask-extension/develop/app/images/eth_logo.svg"
       swap_contract_address: ""
       swap_contract_version: "UniswapV3"
+      tokens:
+        - address: "0x0000000000000000000000000000000000000000"
+          name: "Sepolia Ethereum"
+          symbol: "ETH"
+          decimals: 18
+          logo_uri: "TODO Semёn" TODODODOOD
+          native: true
     - id: 137
       name: "Polygon"
       rpc_url: "https://polygon-rpc.com/"
@@ -69,6 +90,13 @@ chains:
       swap_contract_address: ""
       swap_contract_version: "QuickSwap"
       tokens_info:
+        tokens:
+          - address: "0x0000000000000000000000000000000000000000"
+            name: "Polygon Matic"
+            symbol: "MATIC"
+            decimals: 18
+            logo_uri: "TODO Semёn" TODODODOOD
+            native: true
         list_urls:
           - "https://unpkg.com/quickswap-default-token-list@1.2.78/build/quickswap-default.tokenlist.json"
     - id: 80001
@@ -82,6 +110,13 @@ chains:
       swap_contract_address: "0x24Ae0B9DC81d2E4e9383e283163913BF200a579F"
       swap_contract_version: "QuickSwap"
       tokens_info:
+        tokens:
+          - address: "0x0000000000000000000000000000000000000000"
+            name: "Polygon Mumbai Matic"
+            symbol: "MATIC"
+            decimals: 18
+            logo_uri: "TODO Semёn" TODODODOOD
+            native: true
         list_urls:
           - "https://unpkg.com/quickswap-default-token-list@1.2.78/build/quickswap-default.tokenlist.json"
     - id: 43114
@@ -95,6 +130,13 @@ chains:
       swap_contract_address: "0x2021Fa349Ec57F33F03961E430f54d9b05781E3c"
       swap_contract_version: "TraderJoe"
       tokens_info:
+        tokens:
+          - address: "0x0000000000000000000000000000000000000000"
+            name: "Avalanche"
+            symbol: "AVAX"
+            decimals: 18
+            logo_uri: "TODO Semёn" TODODODOOD
+            native: true
         list_urls:
           - "https://raw.githubusercontent.com/traderjoe-xyz/joe-tokenlists/main/mc.tokenlist.json"
     - id: 43113
@@ -109,6 +151,12 @@ chains:
       swap_contract_version: "TraderJoe"
       tokens_info:
         tokens:
+          - address: "0x0000000000000000000000000000000000000000"
+            name: "Fuji Avalanche"
+            symbol: "AVAX"
+            decimals: 18
+            logo_uri: "TODO Semёn" TODODODOOD
+            native: true
           - address: "0xd00ae08403B9bbb9124bB305C09058E32C39A48c"
             name: "Wrapped AVAX"
             symbol: "WAVAX"
@@ -130,6 +178,13 @@ chains:
       swap_contract_address: "0x85718348D854CE2768e96D87a2ed6d12d619b67B"
       swap_contract_version: "PancakeSwap"
       tokens_info:
+        tokens:
+          - address: "0x0000000000000000000000000000000000000000"
+            name: "Binance Coin"
+            symbol: "BNB"
+            decimals: 18
+            logo_uri: "TODO Semёn" TODODODOOD
+            native: true
         list_urls:
           - "https://tokens.pancakeswap.finance/pancakeswap-extended.json"
           - "https://raw.githubusercontent.com/pancakeswap/token-list/main/lists/cmc.json"
@@ -145,6 +200,12 @@ chains:
       swap_contract_version: "PancakeSwap"
       tokens_info:
         tokens:
+          - address: "0x0000000000000000000000000000000000000000"
+            name: "Binance Testnet Coin"
+            symbol: "tBNB"
+            decimals: 18
+            logo_uri: "TODO Semёn" TODODODOOD
+            native: true
           - address: "0x8BaBbB98678facC7342735486C851ABD7A0d17Ca"
             name: "Ethereum Token"
             symbol: "ETH"
