@@ -33,6 +33,7 @@ func (c *config) ChainsCfg() *chains.Config {
 }
 
 func validateChains(cfg chains.Config) error {
+chainsLoop:
 	for _, chain := range cfg.Chains {
 		if chain.NativeSymbol == "" {
 			return errors.From(errors.New("native symbol is required"), logan.F{
@@ -42,7 +43,7 @@ func validateChains(cfg chains.Config) error {
 
 		for _, tokenInfo := range chain.TokensInfo.Tokens {
 			if tokenInfo.Symbol == chain.NativeSymbol {
-				continue
+				continue chainsLoop // native token is configured
 			}
 		}
 
