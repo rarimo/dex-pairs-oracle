@@ -15,7 +15,7 @@ allOf:
           - swap_contract_address
           - swap_contract_version
           - explorer_url
-          - native_symbol
+          - native_token
         properties:
           name:
             type: string
@@ -57,6 +57,5 @@ allOf:
           explorer_url:
             type: string
             example: "https://bscscan.com/"
-          native_symbol:
-            type: string
-            example: "BNB"
+          native_token:
+            $ref: '#/components/schemas/NativeTokenInfo'

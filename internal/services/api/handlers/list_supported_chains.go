@@ -69,7 +69,7 @@ func ListSupportedChain(w http.ResponseWriter, r *http.Request) {
 }
 
 func chainToResource(chain chains.Chain) resources.Chain {
-	return resources.Chain{
+	c := resources.Chain{
 		Key: resources.Key{
 			ID:   strconv.FormatInt(chain.ID, 10),
 			Type: resources.CHAINS,
@@ -83,9 +83,21 @@ func chainToResource(chain chains.Chain) resources.Chain {
 			SwapContractVersion: string(chain.SwapContractVersion),
 			Type:                chainTypeToResource(chain.Type),
 			ExplorerUrl:         chain.ExplorerURL,
-			NativeSymbol:        chain.NativeSymbol,
 		},
 	}
+
+	for _, token := range chain.TokensInfo.Tokens {
+		if token.Native {
+			c.Attributes.NativeToken = resources.NativeTokenInfo{
+				Symbol:   token.Symbol,
+				Name:     token.Name,
+				Decimals: token.Decimals,
+			}
+			break
+		}
+	}
+
+	return c
 }
 
 func chainKindToResource(kind chains.Kind) resources.ChainKind {
