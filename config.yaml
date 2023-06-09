@@ -70,15 +70,16 @@ chains:
       type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
       kind: "testnet"
       icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/eth-logo.png"
-      swap_contract_address: ""
+      swap_contract_address: "0x0000000000000000000000000000000000000000"
       swap_contract_version: "UniswapV3"
-      tokens:
-        - address: "0x0000000000000000000000000000000000000000"
-          name: "Sepolia Ethereum"
-          symbol: "ETH"
-          decimals: 18
-          logo_uri: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/eth-logo.png"
-          native: true
+      tokens_info:
+        tokens:
+          - address: "0x0000000000000000000000000000000000000000"
+            name: "Sepolia Ethereum"
+            symbol: "ETH"
+            decimals: 18
+            logo_uri: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/eth-logo.png"
+            native: true
     - id: 137
       name: "Polygon"
       rpc_url: "https://polygon-rpc.com/"
