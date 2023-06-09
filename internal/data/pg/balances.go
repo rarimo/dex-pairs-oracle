@@ -17,6 +17,10 @@ import (
 )
 
 func (q BalanceQ) InsertBatchCtx(ctx context.Context, balances ...data.Balance) error {
+	if len(balances) == 0 {
+		return nil
+	}
+
 	stmt := squirrel.Insert("public.balances").
 		Columns(
 			"account_address", "token", "chain_id",
@@ -34,6 +38,10 @@ func (q BalanceQ) InsertBatchCtx(ctx context.Context, balances ...data.Balance) 
 }
 
 func (q BalanceQ) UpsertBatchCtx(ctx context.Context, balances ...data.Balance) error {
+	if len(balances) == 0 {
+		return nil
+	}
+
 	stmt := squirrel.Insert("public.balances").
 		Columns(
 			"account_address", "token", "chain_id",
