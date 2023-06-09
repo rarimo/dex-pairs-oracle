@@ -213,6 +213,8 @@ func balanceToResource(balance data.Balance, chain chains.Chain) resources.Balan
 // let the balances observer will make all the rest
 // in case user has non-zero balances - balances_observer will update them in a short while
 func makeBalancesDummies(r *http.Request, chainID int64, accountAddress string, number int64) ([]data.Balance, error) {
+	startCursor := "0x0000000000000000000000000000000000000000"
+
 	lastBalance, err := Config(r).Storage().BalanceQ().SelectCtx(r.Context(), data.BalancesSelector{
 		AccountAddress: &accountAddress,
 		ChainID:        &chainID,
@@ -225,20 +227,19 @@ func makeBalancesDummies(r *http.Request, chainID int64, accountAddress string, 
 		return nil, errors.Wrap(err, "failed to get last balance")
 	}
 
-	if len(lastBalance) == 0 {
+	if len(lastBalance) != 0 {
 		Log(r).WithFields(logan.F{
 			"account_address": accountAddress,
 			"chain_id":        chainID,
-		}).Debug("no balances found for account")
-		return nil, nil
+		}).Debug("found balances for account, starting from the last one")
+		startCursor = hexutil.Encode(lastBalance[0].Token)
 	}
 
 	tokens, err := Config(r).RedisStore().Tokens().Page(r.Context(),
 		chainID,
-		fmt.Sprintf("token:%d:%s", chainID, hexutil.Encode(lastBalance[0].Token)),
+		fmt.Sprintf("token:%d:%s", chainID, startCursor),
 		number)
 	if err != nil {
-		Log(r).WithError(err).Warn("failed to get tokens")
 		return nil, errors.Wrap(err, "failed to get tokens")
 	}
 
