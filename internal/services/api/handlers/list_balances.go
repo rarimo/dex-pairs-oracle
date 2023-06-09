@@ -248,6 +248,7 @@ func makeBalancesDummies(r *http.Request, chainID int64, accountAddress string, 
 			"account_address": accountAddress,
 			"chain_id":        chainID,
 			"cursor":          startCursor,
+			"limit":           number,
 		}).Debug("no tokens left for creating dummies")
 		return nil, nil
 	}
