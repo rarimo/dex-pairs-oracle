@@ -46,7 +46,6 @@ func RunBalancesObserver(ctx context.Context, cfg config.Config) {
 }
 
 type EthAmounter interface {
-	// TODO handle native token here as well
 	Amount(ctx context.Context, chainID int64, token common.Address, account common.Address) (amount *big.Int, blockNumber *big.Int, err error)
 }
 
