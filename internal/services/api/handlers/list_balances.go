@@ -126,23 +126,21 @@ func ListEVMBalances(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if len(additionalBalances) != 0 {
-			balances = append(balances, additionalBalances...)
+		balances = append(balances, additionalBalances...)
 
-			// balance dummies that will later be populated by balances_observer
-			// (inserting them to make furhter requests faster)
-			balanceDummies, err := makeBalancesDummies(r, req.ChainID, req.AccountAddress, 5*req.PageLimit)
-			if err != nil {
-				// we already have all the things we need for the user so
-				// just log it here to be aware if something is wrong with db/redis connection
-				Log(r).WithError(err).Warn("failed to make balance dummies")
-			}
+		// balance dummies that will later be populated by balances_observer
+		// (inserting them to make furhter requests faster)
+		balanceDummies, err := makeBalancesDummies(r, req.ChainID, req.AccountAddress, 5*req.PageLimit)
+		if err != nil {
+			// we already have all the things we need for the user so
+			// just log it here to be aware if something is wrong with db/redis connection
+			Log(r).WithError(err).Warn("failed to make balance dummies")
+		}
 
-			err = Config(r).Storage().BalanceQ().InsertBatchCtx(r.Context(), balanceDummies...)
-			if err != nil {
-				// same here
-				Log(r).WithError(err).Warn("failed to insert balance dummies")
-			}
+		err = Config(r).Storage().BalanceQ().InsertBatchCtx(r.Context(), balanceDummies...)
+		if err != nil {
+			// same here
+			Log(r).WithError(err).Warn("failed to insert balance dummies")
 		}
 	}
 
