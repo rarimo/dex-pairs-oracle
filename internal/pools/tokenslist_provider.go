@@ -56,7 +56,7 @@ func (t *TokensListProvider) init(ctx context.Context, chains *chains.Config) er
 				continue
 			}
 
-			version, err := t.store.TokenLists().GetVersion(ctx, storedURL)
+			version, err := t.store.TokenLists().GetVersion(ctx, storedURL, c.ID)
 			if err != nil {
 				return errors.Wrap(err, "failed to get stored token list version", logan.F{
 					"chain_id": c.ID,

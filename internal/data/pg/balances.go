@@ -87,21 +87,26 @@ func applyBalancesSelector(stmt squirrel.SelectBuilder, selector data.BalancesSe
 		stmt = stmt.Where(squirrel.Eq{"account_address": hexutil.MustDecode(*selector.AccountAddress)})
 	}
 
-	stmt = applyBalancesPagination(stmt, selector.Sort, selector.TokenCursor, selector.PageSize)
+	stmt = applyBalancesPagination(stmt, selector.Sort, selector.Cursor, selector.TokenCursor, selector.PageSize)
 
 	return stmt
 }
 
-func applyBalancesPagination(stmt squirrel.SelectBuilder, sorts pgdb.Sorts, tokenCursor []byte, limit uint64) squirrel.SelectBuilder {
+func applyBalancesPagination(stmt squirrel.SelectBuilder, sorts pgdb.Sorts, idCursor int64, tokenCursor []byte, limit uint64) squirrel.SelectBuilder {
 	stmt = stmt.Limit(limit)
 
 	if len(sorts) == 0 {
-		sorts = pgdb.Sorts{"token"}
+		sorts = pgdb.Sorts{"id"}
 	}
 
 	stmtSorts := pgdb.Sorts{"token"}
 	for _, sort := range sorts {
-		if sort == "token" || sort == "-token" {
+		if sort == "token" {
+			continue
+		}
+
+		if sort == "-token" {
+			stmtSorts[0] = "-token"
 			continue
 		}
 
@@ -110,17 +115,22 @@ func applyBalancesPagination(stmt squirrel.SelectBuilder, sorts pgdb.Sorts, toke
 
 	stmt = sorts.ApplyTo(stmt, map[string]string{ // TODO move it kinda closer to the handler's request model
 		"token":  "token",
+		"id":     "id",
 		"time":   "created_at",
 		"amount": "amount",
 	})
 
-	if len(tokenCursor) != 0 {
-		comp := ">" // default to ascending order
-		if sortDesc := strings.HasPrefix(string(sorts[0]), "-"); sortDesc {
-			comp = "<"
-		}
+	comp := ">" // default to ascending order
 
+	if sortDesc := strings.HasPrefix(string(sorts[0]), "-"); sortDesc {
+		comp = "<"
+	}
+
+	switch {
+	case len(tokenCursor) != 0:
 		stmt = stmt.Where(fmt.Sprintf("token %s ?", comp), tokenCursor)
+	case idCursor != 0:
+		stmt = stmt.Where(fmt.Sprintf("id %s ?", comp), idCursor)
 	}
 
 	return stmt

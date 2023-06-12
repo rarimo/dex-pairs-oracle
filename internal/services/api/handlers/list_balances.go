@@ -104,7 +104,7 @@ func ListEVMBalances(w http.ResponseWriter, r *http.Request) {
 	if len(balances) < int(req.PageLimit) {
 		limit := req.PageLimit - int64(len(balances))
 
-		tokenCursor := fmt.Sprintf("token:%d:%s", req.ChainID, hexutil.Encode(req.TokenCursor))
+		tokenCursor := ""
 		if len(balances) != 0 {
 			tokenCursor = fmt.Sprintf("token:%d:%s", req.ChainID, hexutil.Encode(balances[len(balances)-1].Token))
 		}

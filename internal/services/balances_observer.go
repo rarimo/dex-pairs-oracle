@@ -61,14 +61,14 @@ type balancesObserver struct {
 }
 
 func (b balancesObserver) runOnce(ctx context.Context) error {
-	cursor := hexutil.MustDecode("0x0000000000000000000000000000000000000000")
+	var cursor int64
 
 	running.UntilSuccess(ctx, b.log, "run_once_balances_observer", func(ctx context.Context) (bool, error) {
 		balances, err := b.storage.BalanceQ().SelectCtx(ctx, data.BalancesSelector{
-			TokenCursor: cursor,
-			PageSize:    b.observePageSize,
+			Cursor:   cursor,
+			PageSize: b.observePageSize,
 			Sort: pgdb.Sorts{
-				"token",
+				"id",
 			},
 		})
 
@@ -115,10 +115,10 @@ func (b balancesObserver) runOnce(ctx context.Context) error {
 			return false, errors.Wrap(err, "failed to upsert balances")
 		}
 
-		cursor = balances[len(balances)-1].Token
+		cursor = balances[len(balances)-1].ID
 
 		return false, nil
-	}, 1*time.Second, 5*time.Second)
+	}, 100*time.Millisecond, 1*time.Second)
 
 	return nil
 }
