@@ -30,7 +30,7 @@ type listBalancesRequest struct {
 	IncludeChain bool `include:"chain"`
 	IncludeToken bool `include:"token"`
 
-	RawCursor   string `page:"cursor" default:"0x0000000000000000000000000000000000000000"`
+	RawCursor   string `page:"cursor" default:""`
 	TokenCursor []byte
 
 	PageLimit int64      `page:"limit" default:"15"`
@@ -62,7 +62,9 @@ func newListEvmBalancesAddress(r *http.Request) (*listBalancesRequest, error) {
 		}
 	}
 
-	req.TokenCursor = hexutil.MustDecode(req.RawCursor)
+	if req.RawCursor != "" {
+		req.TokenCursor = hexutil.MustDecode(req.RawCursor)
+	}
 
 	return &req, nil
 }
