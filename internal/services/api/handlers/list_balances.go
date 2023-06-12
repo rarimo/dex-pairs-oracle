@@ -101,13 +101,12 @@ func ListEVMBalances(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	tokenCursor := fmt.Sprintf("token:%d:%s", req.ChainID, hexutil.Encode(req.TokenCursor))
-
 	if len(balances) < int(req.PageLimit) {
 		limit := req.PageLimit - int64(len(balances))
 
+		tokenCursor := fmt.Sprintf("token:%d:%s", req.ChainID, hexutil.Encode(req.TokenCursor))
 		if len(balances) != 0 {
-			tokenCursor = fmt.Sprintf("token:%d:%s", req.ChainID, string(balances[len(balances)-1].Token))
+			tokenCursor = fmt.Sprintf("token:%d:%s", req.ChainID, hexutil.Encode(balances[len(balances)-1].Token))
 		}
 
 		// balances we need rn to fill the page
