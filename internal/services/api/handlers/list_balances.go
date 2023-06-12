@@ -286,7 +286,7 @@ func fetchAndSaveBalances(r *http.Request, req listBalancesRequest, redisTokenCu
 		return nil, nil
 	}
 
-	err = Config(r).Storage().BalanceQ().InsertBatchCtx(r.Context(), chainBalances...)
+	err = Config(r).Storage().BalanceQ().UpsertBatchCtx(r.Context(), chainBalances...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to insert balances")
 	}
