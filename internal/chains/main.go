@@ -51,7 +51,8 @@ func (c Config) Find(id int64) *Chain {
 type Chain struct {
 	ID                  int64                    `fig:"id,required"`
 	Name                string                   `fig:"name,required"`
-	RPCUrl              *url.URL                 `fig:"rpc_url,required"`
+	RPCUrl              *url.URL                 `fig:"rpc_url,required"`        // use this for actual rpc calls
+	RPCUrlClient        *url.URL                 `fig:"rpc_url_client,required"` // use this url for rendering responses etc
 	NativeSymbol        string                   `fig:"native_symbol,required"`
 	ExplorerURL         string                   `fig:"explorer_url,required"`
 	Type                tokenmanager.NetworkType `fig:"type,required"`

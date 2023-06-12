@@ -78,7 +78,7 @@ func chainToResource(chain chains.Chain) resources.Chain {
 			Icon:                chain.IconURL,
 			Kind:                chainKindToResource(chain.Kind),
 			Name:                chain.Name,
-			Rpc:                 chain.RPCUrl.String(),
+			Rpc:                 chain.RPCUrlClient.String(),
 			SwapContractAddress: chain.SwapContractAddr.String(),
 			SwapContractVersion: string(chain.SwapContractVersion),
 			Type:                chainTypeToResource(chain.Type),
