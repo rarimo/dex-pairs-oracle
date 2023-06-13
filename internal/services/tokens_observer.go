@@ -114,6 +114,10 @@ func (t *tokensObserver) runOnce(ctx context.Context) error {
 				}
 			}
 
+			if len(newTokens) == 0 {
+				continue
+			}
+
 			if err = t.redisStore.Tokens().Put(ctx, c.ID, newTokens[:]...); err != nil {
 				return errors.Wrap(err, "failed to store tokens", logan.F{
 					"chain_id": c.ID,
