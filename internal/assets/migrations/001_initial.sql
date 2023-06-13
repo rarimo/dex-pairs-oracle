@@ -29,6 +29,7 @@ create index if not exists balances_chain_id_idx on balances using btree(chain_i
 
 drop index if exists balances_chain_id_idx;
 drop index if exists balances_account_address_idx;
+drop index if exists balances_token_idx;
 
 drop table if exists balances;
 

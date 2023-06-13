@@ -141,7 +141,7 @@ func (q *tokensQ) Page(ctx context.Context, chainID int64, cursor string, limit 
 }
 
 func (q *tokensQ) All(ctx context.Context, chain int64) ([]chains.TokenInfo, error) {
-	tokenKeys, err := q.r.SMembers(ctx, makeChainTokensKey(chain)).Result()
+	tokenKeys, err := q.r.ZRevRange(ctx, makeChainTokensKey(chain), 0, -1).Result()
 	if err != nil {
 		if errors.Cause(err) == redis.Nil {
 			return nil, nil
