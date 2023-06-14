@@ -42,7 +42,7 @@ func (p *Provider) GetBalances(ctx context.Context, address string, chainID int6
 	for i, token := range tokens {
 		tokenAddr := common.HexToAddress(token.Address)
 
-		amount, block, err := p.amounter.Amount(ctx, chainID, tokenAddr, accountAddr)
+		amount, err := p.amounter.Amount(ctx, chainID, tokenAddr, accountAddr)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get amount", logan.F{
 				"address": address,
@@ -59,7 +59,6 @@ func (p *Provider) GetBalances(ctx context.Context, address string, chainID int6
 			Amount:         data.Int256{Int: amount},
 			CreatedAt:      now,
 			UpdatedAt:      now,
-			LastKnownBlock: block.Int64(),
 		}
 	}
 

@@ -29,17 +29,17 @@ func NewProvider(chains *chains.Config) *Provider {
 	}
 }
 
-func (p *Provider) Amount(ctx context.Context, chainID int64, token common.Address, account common.Address) (*big.Int, *big.Int, error) {
+func (p *Provider) Amount(ctx context.Context, chainID int64, token common.Address, account common.Address) (*big.Int, error) {
 	chain := p.chains.Find(chainID)
 	if chain == nil {
-		return nil, nil, etherrors.ErrChainNotSupported
+		return nil, etherrors.ErrChainNotSupported
 	}
 
 	ethc, ok := p.chainClients[chainID]
 	if !ok {
 		dial, err := ethclient.Dial(chain.RPCUrl.String())
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to dial rpc", logan.F{
+			return nil, errors.Wrap(err, "failed to dial rpc", logan.F{
 				"chain_id": chainID,
 			})
 		}
@@ -47,28 +47,22 @@ func (p *Provider) Amount(ctx context.Context, chainID int64, token common.Addre
 		ethc = dial
 	}
 
-	block, err := ethc.BlockByNumber(ctx, nil)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to get latest block")
-	}
-
 	if isZeroAddr(token) {
-		balance, err := ethc.BalanceAt(ctx, account, block.Number())
+		balance, err := ethc.BalanceAt(ctx, account, nil)
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to get balance", logan.F{
+			return nil, errors.Wrap(err, "failed to get balance", logan.F{
 				"account": account.String(),
-				"block":   block.Number().String(),
 			})
 		}
 
-		return balance, block.Number(), nil
+		return balance, nil
 	}
 
 	contract, ok := p.contracts[token]
 	if !ok {
 		erc20, err := bind.NewERC20Caller(token, ethc)
 		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to init erc20 caller", logan.F{
+			return nil, errors.Wrap(err, "failed to init erc20 caller", logan.F{
 				"token": token.String(),
 			})
 		}
@@ -78,18 +72,16 @@ func (p *Provider) Amount(ctx context.Context, chainID int64, token common.Addre
 	}
 
 	balance, err := contract.BalanceOf(&abibind.CallOpts{
-		BlockNumber: block.Number(),
-		Context:     ctx,
+		Context: ctx,
 	}, account)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to get balance", logan.F{
+		return nil, errors.Wrap(err, "failed to get balance", logan.F{
 			"account": account.String(),
-			"block":   block.Number().String(),
 			"token":   token.String(),
 		})
 	}
 
-	return balance, block.Number(), nil
+	return balance, nil
 }
 
 func isZeroAddr(addr common.Address) bool {

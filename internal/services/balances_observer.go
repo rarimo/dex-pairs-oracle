@@ -46,7 +46,7 @@ func RunBalancesObserver(ctx context.Context, cfg config.Config) {
 }
 
 type EthAmounter interface {
-	Amount(ctx context.Context, chainID int64, token common.Address, account common.Address) (amount *big.Int, blockNumber *big.Int, err error)
+	Amount(ctx context.Context, chainID int64, token common.Address, account common.Address) (amount *big.Int, err error)
 }
 
 type balancesObserver struct {
@@ -80,6 +80,8 @@ func (b balancesObserver) runOnce(ctx context.Context) error {
 			return true, nil
 		}
 
+		now := time.Now()
+
 		for i := 0; i < len(balances); i++ {
 			chain := b.chains.Find(balances[i].ChainID)
 			if chain == nil {
@@ -90,7 +92,7 @@ func (b balancesObserver) runOnce(ctx context.Context) error {
 
 			switch chain.Type {
 			case tokenmanager.NetworkType_EVM:
-				amount, block, err := b.ethAmounter.Amount(ctx,
+				amount, err := b.ethAmounter.Amount(ctx,
 					balances[i].ChainID,
 					common.BytesToAddress(balances[i].Token),
 					common.BytesToAddress(balances[i].AccountAddress))
@@ -98,11 +100,10 @@ func (b balancesObserver) runOnce(ctx context.Context) error {
 					return false, errors.Wrap(err, "failed to get token balance", logan.F{
 						"token":   hexutil.Encode(balances[i].Token),
 						"account": hexutil.Encode(balances[i].AccountAddress),
-						"block":   block.String(),
 					})
 				}
 
-				balances[i].LastKnownBlock = block.Int64()
+				balances[i].UpdatedAt = now
 				balances[i].Amount = data.Int256{Int: amount}
 			default: // solana, near etc.
 				b.log.WithField("chain_id", balances[i].ChainID).Debug("chain type not supported")
