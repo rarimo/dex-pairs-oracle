@@ -119,7 +119,7 @@ func (b balancesObserver) runOnce(ctx context.Context) error {
 		cursor = balances[len(balances)-1].ID
 
 		return false, nil
-	}, 100*time.Millisecond, 1*time.Second)
+	}, 1*time.Second, 5*time.Second)
 
 	return nil
 }
