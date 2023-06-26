@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strings"
 
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
 
@@ -184,7 +185,7 @@ func (q *tokensQ) All(ctx context.Context, chain int64) ([]chains.TokenInfo, err
 }
 
 func makeTokenKey(address string, chainID int64) string {
-	return fmt.Sprintf("token:%d:%s", chainID, address)
+	return strings.ToLower(fmt.Sprintf("token:%d:%s", chainID, address))
 }
 
 func makeChainTokensKey(chainID int64) string {
