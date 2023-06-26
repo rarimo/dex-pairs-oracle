@@ -3,6 +3,7 @@ package config
 import (
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
+	"gitlab.com/rarimo/dex-pairs-oracle/pkg/ethamounts"
 
 	"gitlab.com/distributed_lab/figure/v3"
 	"gitlab.com/distributed_lab/kit/kv"
@@ -26,6 +27,15 @@ func (c *config) ChainsCfg() *chains.Config {
 
 		if err := validateChains(cfg); err != nil {
 			panic(errors.Wrap(err, "failed to validate "+cfgName))
+		}
+
+		for i := 0; i < len(cfg.Chains); i++ {
+			cfg.Chains[i].BalanceProvider, err = ethamounts.NewMultiProvider(cfg.Chains[i].RPCUrl)
+			if err != nil {
+				panic(errors.Wrap(err, "failed to create balance provider", logan.F{
+					"chain": cfg.Chains[i].Name,
+				}))
+			}
 		}
 
 		return &cfg
