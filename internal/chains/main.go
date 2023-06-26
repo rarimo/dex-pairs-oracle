@@ -1,6 +1,8 @@
 package chains
 
 import (
+	"context"
+	"math/big"
 	"net/url"
 	"strings"
 
@@ -48,6 +50,10 @@ func (c Config) Find(id int64) *Chain {
 	return nil
 }
 
+type EthMultiAmounter interface {
+	Amounts(ctx context.Context, account common.Address, tokens []common.Address) (*big.Int, []*big.Int, error)
+}
+
 type Chain struct {
 	ID                  int64                    `fig:"id,required"`
 	Name                string                   `fig:"name,required"`
@@ -61,6 +67,8 @@ type Chain struct {
 	SwapContractAddr    common.Address           `fig:"swap_contract_address,required"`
 	SwapContractVersion SwapContractVersion      `fig:"swap_contract_version,required"`
 	TokensInfo          TokensInfo               `fig:"tokens_info"`
+
+	BalanceProvider EthMultiAmounter `fig:"-"`
 }
 
 type TokensInfo struct {

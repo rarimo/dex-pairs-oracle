@@ -2,7 +2,9 @@ package services
 
 import (
 	"context"
+	"fmt"
 	"math/big"
+	"sync"
 	"time"
 
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
@@ -12,9 +14,6 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/common/hexutil"
-
-	tokenmanager "gitlab.com/rarimo/rarimo-core/x/tokenmanager/types"
 
 	"gitlab.com/distributed_lab/kit/pgdb"
 
@@ -29,20 +28,31 @@ import (
 )
 
 func RunBalancesObserver(ctx context.Context, cfg config.Config) {
-	observer := balancesObserver{
-		log:             cfg.Log(),
-		storage:         cfg.NewStorage(),
-		chains:          cfg.ChainsCfg(),
-		ethAmounter:     ethamounts.NewProvider(cfg.ChainsCfg()),
-		observePageSize: cfg.BalancesObserver().PageSize,
+	var wg sync.WaitGroup
+
+	wg.Add(len(cfg.ChainsCfg().Chains))
+
+	for _, chain := range cfg.ChainsCfg().Chains {
+		go func(chain chains.Chain) {
+			defer wg.Done()
+
+			observer := balancesObserver{
+				log:             cfg.Log(),
+				storage:         cfg.NewStorage(),
+				chain:           chain,
+				ethAmounter:     ethamounts.NewProvider(cfg.ChainsCfg()),
+				observePageSize: cfg.BalancesObserver().PageSize,
+			}
+
+			running.WithBackOff(ctx, observer.log, fmt.Sprintf("balances_observer:%s", chain.Name),
+				observer.runOnce,
+				cfg.BalancesObserver().Interval,
+				2*cfg.BalancesObserver().Interval,
+				5*cfg.BalancesObserver().Interval)
+		}(chain)
 	}
 
-	running.WithBackOff(ctx, observer.log, "balances_observer",
-		observer.runOnce,
-		cfg.BalancesObserver().Interval,
-		2*cfg.BalancesObserver().Interval,
-		5*cfg.BalancesObserver().Interval)
-
+	wg.Wait()
 }
 
 type EthAmounter interface {
@@ -52,7 +62,7 @@ type EthAmounter interface {
 type balancesObserver struct {
 	log     *logan.Entry
 	storage data.Storage
-	chains  *chains.Config
+	chain   chains.Chain
 
 	ethClients  map[int64]*ethclient.Client // map[chain_id]client
 	ethAmounter EthAmounter
@@ -63,10 +73,11 @@ type balancesObserver struct {
 func (b balancesObserver) runOnce(ctx context.Context) error {
 	var cursor int64
 
-	running.UntilSuccess(ctx, b.log, "run_once_balances_observer", func(ctx context.Context) (bool, error) {
+	running.UntilSuccess(ctx, b.log, fmt.Sprintf("run_once_balances_observer:%s", b.chain.Name), func(ctx context.Context) (bool, error) {
 		balances, err := b.storage.BalanceQ().SelectCtx(ctx, data.BalancesSelector{
 			Cursor:   cursor,
 			PageSize: b.observePageSize,
+			ChainID:  &b.chain.ID,
 			Sort: pgdb.Sorts{
 				"id",
 			},
@@ -80,38 +91,46 @@ func (b balancesObserver) runOnce(ctx context.Context) error {
 			return true, nil
 		}
 
-		now := time.Now()
+		accountTokens := make(map[common.Address][]common.Address) // map[address]token
 
-		for i := 0; i < len(balances); i++ {
-			chain := b.chains.Find(balances[i].ChainID)
-			if chain == nil {
-				return false, errors.From(errors.New("chain not found"), logan.F{
-					"chain_id": balances[i].ChainID,
-				})
+		balancesMapping := make(map[string]data.Balance) // map[address:token]balance
+
+		for _, balance := range balances {
+			addrTokens, ok := accountTokens[common.BytesToAddress(balance.AccountAddress)]
+			if !ok {
+				addrTokens = make([]common.Address, 0, len(balances))
+			}
+			accountTokens[common.BytesToAddress(balance.AccountAddress)] = append(addrTokens, common.BytesToAddress(balance.Token))
+
+			balancesMapping[fmt.Sprintf("%s:%s",
+				common.BytesToAddress(balance.AccountAddress).String(),
+				common.BytesToAddress(balance.Token).String())] = balance
+		}
+
+		updatedBalances := make([]data.Balance, 0, len(balances))
+		for addr, tokens := range accountTokens {
+			block, amounts, err := b.chain.BalanceProvider.Amounts(ctx, addr, tokens)
+			if err != nil {
+				return false, errors.Wrap(err, "failed to fetch amounts")
 			}
 
-			switch chain.Type {
-			case tokenmanager.NetworkType_EVM:
-				amount, err := b.ethAmounter.Amount(ctx,
-					balances[i].ChainID,
-					common.BytesToAddress(balances[i].Token),
-					common.BytesToAddress(balances[i].AccountAddress))
-				if err != nil {
-					return false, errors.Wrap(err, "failed to get token balance", logan.F{
-						"token":   hexutil.Encode(balances[i].Token),
-						"account": hexutil.Encode(balances[i].AccountAddress),
-					})
-				}
+			now := time.Now()
 
-				balances[i].UpdatedAt = now
-				balances[i].Amount = data.Int256{Int: amount}
-			default: // solana, near etc.
-				b.log.WithField("chain_id", balances[i].ChainID).Debug("chain type not supported")
-				continue
+			for i, token := range tokens {
+				balanceKey := fmt.Sprintf("%s:%s", addr.String(), token.String())
+
+				balance := balancesMapping[balanceKey]
+				balance.Amount = data.Int256{
+					Int: amounts[i],
+				}
+				balance.LastKnownBlock = block.Int64()
+				balance.UpdatedAt = now
+
+				updatedBalances = append(updatedBalances, balance)
 			}
 		}
 
-		err = b.storage.BalanceQ().UpsertBatchCtx(ctx, balances...)
+		err = b.storage.BalanceQ().UpsertBatchCtx(ctx, updatedBalances...)
 		if err != nil {
 			return false, errors.Wrap(err, "failed to upsert balances")
 		}

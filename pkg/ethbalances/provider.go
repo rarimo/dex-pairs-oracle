@@ -13,7 +13,7 @@ import (
 
 type Provider struct {
 	redisstore data.RedisStore
-	amounter   *ethamounts.Provider // map[chainID:contractAddr]amounter
+	amounter   *ethamounts.Provider
 }
 
 func NewProvider(redisstore data.RedisStore, provider *ethamounts.Provider) *Provider {
