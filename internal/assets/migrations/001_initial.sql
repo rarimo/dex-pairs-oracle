@@ -10,6 +10,7 @@ create domain int_256 as numeric not null
     check (scale(value) = 0);
 
 create table if not exists balances (
+  id bigserial not null primary key,
   account_address bytea not null,
   token bytea not null,
   chain_id bigint not null,
@@ -17,7 +18,7 @@ create table if not exists balances (
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
   last_known_block bigint not null default 0,
-  primary key (chain_id, token, account_address)
+  unique (chain_id, token, account_address)
 );
 
 create index if not exists balances_token_idx on balances using btree(token);
@@ -28,6 +29,7 @@ create index if not exists balances_chain_id_idx on balances using btree(chain_i
 
 drop index if exists balances_chain_id_idx;
 drop index if exists balances_account_address_idx;
+drop index if exists balances_token_idx;
 
 drop table if exists balances;
 

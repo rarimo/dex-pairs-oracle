@@ -14,6 +14,8 @@ allOf:
           - icon
           - swap_contract_address
           - swap_contract_version
+          - explorer_url
+          - native_token
         properties:
           name:
             type: string
@@ -52,3 +54,8 @@ allOf:
           swap_contract_version:
             type: string
             example: "PancakeSwap"
+          explorer_url:
+            type: string
+            example: "https://bscscan.com/"
+          native_token:
+            $ref: '#/components/schemas/NativeTokenInfo'

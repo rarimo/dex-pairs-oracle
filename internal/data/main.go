@@ -37,7 +37,7 @@ type TokensQ interface {
 }
 
 type TokenListsQ interface {
-	GetVersion(ctx context.Context, url string) (*TokenListVersion, error)
+	GetVersion(ctx context.Context, url string, chainID int64) (*TokenListVersion, error)
 	GetURLs(ctx context.Context, chainID int64) ([]string, error)
 	PutURLs(ctx context.Context, chainID int64, urlVersions map[string]TokenListVersion) error
 	DeleteURLs(ctx context.Context, chainID int64, urls ...string) error

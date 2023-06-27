@@ -79,7 +79,7 @@ func (t *tokensObserver) runOnce(ctx context.Context) error {
 		}
 
 		for _, live := range liveLists {
-			lastKnownVersion, err := t.redisStore.TokenLists().GetVersion(ctx, live.URI)
+			lastKnownVersion, err := t.redisStore.TokenLists().GetVersion(ctx, live.URI, c.ID)
 			if err != nil {
 				return errors.Wrap(err, "failed to get last known token list", logan.F{
 					"chain_id": c.ID,
@@ -97,6 +97,10 @@ func (t *tokensObserver) runOnce(ctx context.Context) error {
 			newTokens := make([]chains.TokenInfo, 0, len(live.Tokens))
 
 			for _, token := range live.Tokens {
+				if token.ChainID != c.ID {
+					continue
+				}
+
 				stored, err := t.redisStore.Tokens().Get(ctx, token.Address, token.ChainID)
 				if err != nil {
 					return errors.Wrap(err, "failed to get token", logan.F{
@@ -108,6 +112,10 @@ func (t *tokensObserver) runOnce(ctx context.Context) error {
 				if stored == nil || stored.Name != token.Name || stored.LogoURI != token.LogoURI {
 					newTokens = append(newTokens, token.TokenInfo)
 				}
+			}
+
+			if len(newTokens) == 0 {
+				continue
 			}
 
 			if err = t.redisStore.Tokens().Put(ctx, c.ID, newTokens[:]...); err != nil {

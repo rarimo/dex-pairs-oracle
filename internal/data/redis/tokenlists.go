@@ -20,8 +20,8 @@ var (
 	ErrTxFailed = errors.New("tx failed")
 )
 
-func (s *tokenListsQ) GetVersion(ctx context.Context, url string) (*data.TokenListVersion, error) {
-	rawVersion, err := s.r.Get(ctx, makeChainsTokenListVersionKey(url)).Result()
+func (s *tokenListsQ) GetVersion(ctx context.Context, url string, chainID int64) (*data.TokenListVersion, error) {
+	rawVersion, err := s.r.Get(ctx, makeChainsTokenListVersionKey(url, chainID)).Result()
 	if err != nil {
 		if errors.Cause(err) == redis.Nil {
 			return nil, nil
@@ -61,8 +61,8 @@ func (s *tokenListsQ) DeleteURLs(ctx context.Context, chainID int64, urls ...str
 
 	for _, url := range urls {
 		urlI = append(urlI, url)
-		urlVersionKeys = append(urlVersionKeys, makeChainsTokenListVersionKey(url))
-		watch = append(watch, makeChainsTokenListVersionKey(url))
+		urlVersionKeys = append(urlVersionKeys, makeChainsTokenListVersionKey(url, chainID))
+		watch = append(watch, makeChainsTokenListVersionKey(url, chainID))
 	}
 
 	err := s.r.Watch(ctx, func(tx *redis.Tx) error {
@@ -116,7 +116,7 @@ func (s *tokenListsQ) PutURLs(ctx context.Context, chainID int64, urlVersions ma
 		}
 
 		rawVersions = append(rawVersions,
-			makeChainsTokenListVersionKey(url),
+			makeChainsTokenListVersionKey(url, chainID),
 			string(rawVersion))
 	}
 
@@ -148,6 +148,6 @@ func makeChainsTokenListURLsKey(chainID int64) string {
 	return fmt.Sprintf("chain_tokens_list_urls:%d", chainID)
 }
 
-func makeChainsTokenListVersionKey(url string) string {
-	return fmt.Sprintf("%s:version", url)
+func makeChainsTokenListVersionKey(url string, chainID int64) string {
+	return fmt.Sprintf("version:%d:%s", chainID, url)
 }

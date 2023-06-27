@@ -3,6 +3,7 @@ package pools
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"net/http"
 	"time"
 
@@ -55,7 +56,7 @@ func (t *TokensListProvider) init(ctx context.Context, chains *chains.Config) er
 				continue
 			}
 
-			version, err := t.store.TokenLists().GetVersion(ctx, storedURL)
+			version, err := t.store.TokenLists().GetVersion(ctx, storedURL, c.ID)
 			if err != nil {
 				return errors.Wrap(err, "failed to get stored token list version", logan.F{
 					"chain_id": c.ID,
@@ -119,11 +120,20 @@ func (t *TokensListProvider) LiveLists(ctx context.Context, chainID int64) ([]Ve
 			})
 		}
 
+		respBB, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to read token list response body", logan.F{
+				"chain_id": chainID,
+				"url":      url,
+			})
+		}
+
 		var list VersionedTokenList
-		if err := json.NewDecoder(resp.Body).Decode(&list); err != nil {
+		if err := json.Unmarshal(respBB, &list); err != nil {
 			return nil, errors.Wrap(err, "failed to decode token list", logan.F{
 				"chain_id": chainID,
 				"url":      url,
+				"raw_body": string(respBB),
 			})
 		}
 

@@ -1,0 +1,23 @@
+type: object
+required:
+  - name
+  - symbol
+  - decimals
+properties:
+  name:
+    type: string
+    description: |
+      The name of the token.
+    example: "Binance Coin"
+  symbol:
+    type: string
+    description: |
+      The symbol of the token.
+    example: "BNB"
+  decimals:
+    type: integer
+    format: int64
+    description: |
+        The number of decimals the token uses - e.g. 18, means to divide the token amount by 1000000000000000000 to get its user representation.
+    example: 18
+

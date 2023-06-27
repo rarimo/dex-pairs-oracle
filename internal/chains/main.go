@@ -1,6 +1,8 @@
 package chains
 
 import (
+	"context"
+	"math/big"
 	"net/url"
 	"strings"
 
@@ -30,8 +32,9 @@ type Config struct {
 }
 
 func (c Config) FindByName(name string) *Chain {
+	lname := strings.ToLower(name)
 	for _, chain := range c.Chains {
-		if strings.ToLower(chain.Name) == name {
+		if strings.ToLower(chain.Name) == lname {
 			return &chain
 		}
 	}
@@ -47,10 +50,15 @@ func (c Config) Find(id int64) *Chain {
 	return nil
 }
 
+type EthMultiAmounter interface {
+	Amounts(ctx context.Context, account common.Address, tokens []common.Address) (*big.Int, []*big.Int, error)
+}
+
 type Chain struct {
 	ID                  int64                    `fig:"id,required"`
 	Name                string                   `fig:"name,required"`
-	RPCUrl              *url.URL                 `fig:"rpc_url,required"`
+	RPCUrl              *url.URL                 `fig:"rpc_url,required"`        // use this for actual rpc calls
+	RPCUrlClient        *url.URL                 `fig:"rpc_url_client,required"` // use this url for rendering responses etc
 	NativeSymbol        string                   `fig:"native_symbol,required"`
 	ExplorerURL         string                   `fig:"explorer_url,required"`
 	Type                tokenmanager.NetworkType `fig:"type,required"`
@@ -59,6 +67,8 @@ type Chain struct {
 	SwapContractAddr    common.Address           `fig:"swap_contract_address,required"`
 	SwapContractVersion SwapContractVersion      `fig:"swap_contract_version,required"`
 	TokensInfo          TokensInfo               `fig:"tokens_info"`
+
+	BalanceProvider EthMultiAmounter `fig:"-"`
 }
 
 type TokensInfo struct {

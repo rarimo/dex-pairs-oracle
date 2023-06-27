@@ -10,8 +10,6 @@ import (
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
 	"gitlab.com/rarimo/dex-pairs-oracle/internal/data/pg"
 	redisdata "gitlab.com/rarimo/dex-pairs-oracle/internal/data/redis"
-	"gitlab.com/rarimo/dex-pairs-oracle/pkg/ethamounts"
-	"gitlab.com/rarimo/dex-pairs-oracle/pkg/ethbalances"
 	"gitlab.com/rarimo/dex-pairs-oracle/pkg/rd"
 )
 
@@ -28,7 +26,6 @@ type Config interface {
 	RedisStore() data.RedisStore
 	BalancesObserver() *BalancesObserverConfig
 	TokensObserver() *TokensObserverConfig
-	EthBalancesProvider() *ethbalances.Provider
 }
 
 type config struct {
@@ -38,10 +35,9 @@ type config struct {
 	pgdb.Databaser
 	rd.Rediser
 
-	chains              comfig.Once
-	balancesObserver    comfig.Once
-	tokensObserver      comfig.Once
-	ethBalancesProvider comfig.Once
+	chains           comfig.Once
+	balancesObserver comfig.Once
+	tokensObserver   comfig.Once
 
 	getter kv.Getter
 }
@@ -67,10 +63,4 @@ func (c *config) Storage() data.Storage {
 
 func (c *config) RedisStore() data.RedisStore {
 	return redisdata.NewStore(c.RedisClient())
-}
-
-func (c *config) EthBalancesProvider() *ethbalances.Provider {
-	return c.ethBalancesProvider.Do(func() interface{} {
-		return ethbalances.NewProvider(c.RedisStore(), ethamounts.NewProvider(c.ChainsCfg()))
-	}).(*ethbalances.Provider)
 }

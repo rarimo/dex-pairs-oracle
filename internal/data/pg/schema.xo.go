@@ -54,19 +54,24 @@ func (s Storage) BalanceQ() data.BalanceQ {
 	return NewBalanceQ(s.DB())
 }
 
-var colsBalance = `account_address, token, chain_id, amount, created_at, updated_at, last_known_block`
+var colsBalance = `id, account_address, token, chain_id, amount, created_at, updated_at, last_known_block`
 
 // InsertCtx inserts a Balance to the database.
 func (q BalanceQ) InsertCtx(ctx context.Context, b *data.Balance) error {
-	// sql insert query, primary key must be provided
+	// insert (primary key generated and returned by database)
 	sqlstr := `INSERT INTO public.balances (` +
 		`account_address, token, chain_id, amount, created_at, updated_at, last_known_block` +
 		`) VALUES (` +
 		`$1, $2, $3, $4, $5, $6, $7` +
-		`)`
-	// run
-	err := q.db.ExecRawContext(ctx, sqlstr, b.AccountAddress, b.Token, b.ChainID, b.Amount, b.CreatedAt, b.UpdatedAt, b.LastKnownBlock)
-	return errors.Wrap(err, "failed to execute insert query")
+		`) RETURNING id`
+		// run
+
+	err := q.db.GetRawContext(ctx, &b.ID, sqlstr, b.AccountAddress, b.Token, b.ChainID, b.Amount, b.CreatedAt, b.UpdatedAt, b.LastKnownBlock)
+	if err != nil {
+		return errors.Wrap(err, "failed to execute insert")
+	}
+
+	return nil
 }
 
 // Insert insert a Balance to the database.
@@ -78,10 +83,10 @@ func (q BalanceQ) Insert(b *data.Balance) error {
 func (q BalanceQ) UpdateCtx(ctx context.Context, b *data.Balance) error {
 	// update with composite primary key
 	sqlstr := `UPDATE public.balances SET ` +
-		`amount = $1, updated_at = $2, last_known_block = $3 ` +
-		`WHERE account_address = $4 AND token = $5 AND chain_id = $6`
+		`account_address = $1, token = $2, chain_id = $3, amount = $4, updated_at = $5, last_known_block = $6 ` +
+		`WHERE id = $7`
 	// run
-	err := q.db.ExecRawContext(ctx, sqlstr, b.Amount, b.UpdatedAt, b.LastKnownBlock, b.AccountAddress, b.Token, b.ChainID)
+	err := q.db.ExecRawContext(ctx, sqlstr, b.AccountAddress, b.Token, b.ChainID, b.Amount, b.UpdatedAt, b.LastKnownBlock, b.ID)
 	return errors.Wrap(err, "failed to execute update")
 }
 
@@ -94,15 +99,15 @@ func (q BalanceQ) Update(b *data.Balance) error {
 func (q BalanceQ) UpsertCtx(ctx context.Context, b *data.Balance) error {
 	// upsert
 	sqlstr := `INSERT INTO public.balances (` +
-		`account_address, token, chain_id, amount, created_at, updated_at, last_known_block` +
+		`id, account_address, token, chain_id, amount, created_at, updated_at, last_known_block` +
 		`) VALUES (` +
-		`$1, $2, $3, $4, $5, $6, $7` +
+		`$1, $2, $3, $4, $5, $6, $7, $8` +
 		`)` +
-		` ON CONFLICT (account_address, token, chain_id) DO ` +
+		` ON CONFLICT (id) DO ` +
 		`UPDATE SET ` +
-		`amount = EXCLUDED.amount, updated_at = EXCLUDED.updated_at, last_known_block = EXCLUDED.last_known_block `
+		`account_address = EXCLUDED.account_address, token = EXCLUDED.token, chain_id = EXCLUDED.chain_id, amount = EXCLUDED.amount, updated_at = EXCLUDED.updated_at, last_known_block = EXCLUDED.last_known_block `
 	// run
-	if err := q.db.ExecRawContext(ctx, sqlstr, b.AccountAddress, b.Token, b.ChainID, b.Amount, b.CreatedAt, b.UpdatedAt, b.LastKnownBlock); err != nil {
+	if err := q.db.ExecRawContext(ctx, sqlstr, b.ID, b.AccountAddress, b.Token, b.ChainID, b.Amount, b.CreatedAt, b.UpdatedAt, b.LastKnownBlock); err != nil {
 		return errors.Wrap(err, "failed to execute upsert stmt")
 	}
 	return nil
@@ -115,11 +120,11 @@ func (q BalanceQ) Upsert(b *data.Balance) error {
 
 // DeleteCtx deletes the Balance from the database.
 func (q BalanceQ) DeleteCtx(ctx context.Context, b *data.Balance) error {
-	// delete with composite primary key
+	// delete with single primary key
 	sqlstr := `DELETE FROM public.balances ` +
-		`WHERE account_address = $1 AND token = $2 AND chain_id = $3`
+		`WHERE id = $1`
 	// run
-	if err := q.db.ExecRawContext(ctx, sqlstr, b.AccountAddress, b.Token, b.ChainID); err != nil {
+	if err := q.db.ExecRawContext(ctx, sqlstr, b.ID); err != nil {
 		return errors.Wrap(err, "failed to exec delete stmt")
 	}
 	return nil
@@ -227,7 +232,7 @@ func (q GorpMigrationQ) Delete(gm *data.GorpMigration) error {
 func (q BalanceQ) BalancesByAccountAddressCtx(ctx context.Context, accountAddress []byte, isForUpdate bool) ([]data.Balance, error) {
 	// query
 	sqlstr := `SELECT ` +
-		`account_address, token, chain_id, amount, created_at, updated_at, last_known_block ` +
+		`id, account_address, token, chain_id, amount, created_at, updated_at, last_known_block ` +
 		`FROM public.balances ` +
 		`WHERE account_address = $1`
 	// run
@@ -256,7 +261,7 @@ func (q BalanceQ) BalancesByAccountAddress(accountAddress []byte, isForUpdate bo
 func (q BalanceQ) BalancesByChainIDCtx(ctx context.Context, chainID int64, isForUpdate bool) ([]data.Balance, error) {
 	// query
 	sqlstr := `SELECT ` +
-		`account_address, token, chain_id, amount, created_at, updated_at, last_known_block ` +
+		`id, account_address, token, chain_id, amount, created_at, updated_at, last_known_block ` +
 		`FROM public.balances ` +
 		`WHERE chain_id = $1`
 	// run
@@ -279,21 +284,21 @@ func (q BalanceQ) BalancesByChainID(chainID int64, isForUpdate bool) ([]data.Bal
 	return q.BalancesByChainIDCtx(context.Background(), chainID, isForUpdate)
 }
 
-// BalanceByAccountAddressTokenChainIDCtx retrieves a row from 'public.balances' as a Balance.
+// BalanceByChainIDTokenAccountAddressCtx retrieves a row from 'public.balances' as a Balance.
 //
-// Generated from index 'balances_pkey'.
-func (q BalanceQ) BalanceByAccountAddressTokenChainIDCtx(ctx context.Context, accountAddress, token []byte, chainID int64, isForUpdate bool) (*data.Balance, error) {
+// Generated from index 'balances_chain_id_token_account_address_key'.
+func (q BalanceQ) BalanceByChainIDTokenAccountAddressCtx(ctx context.Context, chainID int64, token, accountAddress []byte, isForUpdate bool) (*data.Balance, error) {
 	// query
 	sqlstr := `SELECT ` +
-		`account_address, token, chain_id, amount, created_at, updated_at, last_known_block ` +
+		`id, account_address, token, chain_id, amount, created_at, updated_at, last_known_block ` +
 		`FROM public.balances ` +
-		`WHERE account_address = $1 AND token = $2 AND chain_id = $3`
+		`WHERE chain_id = $1 AND token = $2 AND account_address = $3`
 	// run
 	if isForUpdate {
 		sqlstr += " for update"
 	}
 	var res data.Balance
-	err := q.db.GetRawContext(ctx, &res, sqlstr, accountAddress, token, chainID)
+	err := q.db.GetRawContext(ctx, &res, sqlstr, chainID, token, accountAddress)
 	if err != nil {
 		if errors.Cause(err) == sql.ErrNoRows {
 			return nil, nil
@@ -305,11 +310,44 @@ func (q BalanceQ) BalanceByAccountAddressTokenChainIDCtx(ctx context.Context, ac
 	return &res, nil
 }
 
-// BalanceByAccountAddressTokenChainID retrieves a row from 'public.balances' as a Balance.
+// BalanceByChainIDTokenAccountAddress retrieves a row from 'public.balances' as a Balance.
+//
+// Generated from index 'balances_chain_id_token_account_address_key'.
+func (q BalanceQ) BalanceByChainIDTokenAccountAddress(chainID int64, token, accountAddress []byte, isForUpdate bool) (*data.Balance, error) {
+	return q.BalanceByChainIDTokenAccountAddressCtx(context.Background(), chainID, token, accountAddress, isForUpdate)
+}
+
+// BalanceByIDCtx retrieves a row from 'public.balances' as a Balance.
 //
 // Generated from index 'balances_pkey'.
-func (q BalanceQ) BalanceByAccountAddressTokenChainID(accountAddress, token []byte, chainID int64, isForUpdate bool) (*data.Balance, error) {
-	return q.BalanceByAccountAddressTokenChainIDCtx(context.Background(), accountAddress, token, chainID, isForUpdate)
+func (q BalanceQ) BalanceByIDCtx(ctx context.Context, id int64, isForUpdate bool) (*data.Balance, error) {
+	// query
+	sqlstr := `SELECT ` +
+		`id, account_address, token, chain_id, amount, created_at, updated_at, last_known_block ` +
+		`FROM public.balances ` +
+		`WHERE id = $1`
+	// run
+	if isForUpdate {
+		sqlstr += " for update"
+	}
+	var res data.Balance
+	err := q.db.GetRawContext(ctx, &res, sqlstr, id)
+	if err != nil {
+		if errors.Cause(err) == sql.ErrNoRows {
+			return nil, nil
+		}
+
+		return nil, errors.Wrap(err, "failed to exec select")
+	}
+
+	return &res, nil
+}
+
+// BalanceByID retrieves a row from 'public.balances' as a Balance.
+//
+// Generated from index 'balances_pkey'.
+func (q BalanceQ) BalanceByID(id int64, isForUpdate bool) (*data.Balance, error) {
+	return q.BalanceByIDCtx(context.Background(), id, isForUpdate)
 }
 
 // BalancesByTokenCtx retrieves a row from 'public.balances' as a Balance.
@@ -318,7 +356,7 @@ func (q BalanceQ) BalanceByAccountAddressTokenChainID(accountAddress, token []by
 func (q BalanceQ) BalancesByTokenCtx(ctx context.Context, token []byte, isForUpdate bool) ([]data.Balance, error) {
 	// query
 	sqlstr := `SELECT ` +
-		`account_address, token, chain_id, amount, created_at, updated_at, last_known_block ` +
+		`id, account_address, token, chain_id, amount, created_at, updated_at, last_known_block ` +
 		`FROM public.balances ` +
 		`WHERE token = $1`
 	// run

@@ -22,7 +22,6 @@ func Run(ctx context.Context, cfg config.Config) {
 		ape.CtxMiddleware(
 			handlers.CtxLog(cfg.Log()),
 			handlers.CtxConfig(cfg),
-			handlers.CtxBalancesProvider(cfg.EthBalancesProvider()),
 		),
 	)
 	r.Route("/dexoracle", func(r chi.Router) {
