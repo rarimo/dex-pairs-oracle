@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"time"
 
+	"gitlab.com/rarimo/dex-pairs-oracle/pkg/ethbalances"
+
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/go-chi/chi"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
@@ -70,7 +72,7 @@ func newListEvmBalancesAddress(r *http.Request) (*listBalancesRequest, error) {
 }
 
 type ChainBalancesProvider interface {
-	GetBalances(ctx context.Context, address string, chainID int64, cursor string, limit int64) ([]data.Balance, error)
+	GetBalances(ctx context.Context, address string, tokens []chains.TokenInfo) ([]data.Balance, error)
 }
 
 func ListEVMBalances(w http.ResponseWriter, r *http.Request) {
@@ -272,7 +274,16 @@ func makeBalancesDummies(r *http.Request, chainID int64, accountAddress string, 
 }
 
 func fetchAndSaveBalances(r *http.Request, req listBalancesRequest, redisTokenCursor string, count int64) ([]data.Balance, error) {
-	chainBalances, err := BalancesProvider(r).GetBalances(r.Context(), req.AccountAddress, req.ChainID, redisTokenCursor, count)
+	tokens, err := Config(r).RedisStore().Tokens().Page(r.Context(), req.ChainID, redisTokenCursor, count)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get tokens by chain id", logan.F{
+			"chain_id": req.ChainID,
+		})
+	}
+
+	chainBalances, err := ethbalances.
+		NewProvider(Config(r).RedisStore(), Config(r).ChainsCfg().Find(req.ChainID)).
+		GetBalances(r.Context(), req.AccountAddress, tokens)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get balances from chain", logan.F{
 			"account_address": req.AccountAddress,

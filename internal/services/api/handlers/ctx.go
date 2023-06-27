@@ -15,7 +15,6 @@ const (
 	logCtxKey ctxKey = iota
 	configCtxKey
 	storageCtxKey
-	balancesProviderCtxKey
 )
 
 func CtxLog(entry *logan.Entry) func(context.Context) context.Context {
@@ -46,14 +45,4 @@ func CtxStorage(storage data.Storage) func(context.Context) context.Context {
 
 func Storage(r *http.Request) data.Storage {
 	return r.Context().Value(storageCtxKey).(data.Storage)
-}
-
-func CtxBalancesProvider(provider ChainBalancesProvider) func(context.Context) context.Context {
-	return func(ctx context.Context) context.Context {
-		return context.WithValue(ctx, balancesProviderCtxKey, provider)
-	}
-}
-
-func BalancesProvider(r *http.Request) ChainBalancesProvider {
-	return r.Context().Value(balancesProviderCtxKey).(ChainBalancesProvider)
 }
