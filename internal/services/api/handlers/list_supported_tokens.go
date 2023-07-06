@@ -42,6 +42,12 @@ func newListSupportedTokensRequest(r *http.Request) (*listSupportedTokensRequest
 		req.tokenCursor = rawCursor
 	}
 
+	if req.Limit < 0 || req.Limit > 500 {
+		return nil, validation.Errors{
+			"limit": fmt.Errorf("limit should be less than 500"),
+		}
+	}
+
 	chainName := chi.URLParam(r, "chain_name")
 	chain := Config(r).ChainsCfg().FindByName(strings.ToLower(chainName))
 	if chain == nil {
