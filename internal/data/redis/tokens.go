@@ -135,7 +135,7 @@ func (q *tokensQ) Page(ctx context.Context, chainID int64, cursor string, limit 
 
 	// to make sure that tokens are sorted by address after mget
 	sort.Slice(tokens, func(i, j int) bool {
-		return tokens[i].Address < tokens[j].Address
+		return strings.ToLower(tokens[i].Address) < strings.ToLower(tokens[j].Address)
 	})
 
 	return tokens, nil
