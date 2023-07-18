@@ -12,7 +12,7 @@ allOf:
           - kind
           - rpc
           - icon
-          - fee_manager_address
+          - bridge_facade_address
           - swap_contract_address
           - swap_contract_version
           - explorer_url
@@ -49,7 +49,7 @@ allOf:
           icon:
             type: string
             example: "https://raw.githubusercontent.com/MetaMask/metamask-extension/develop/app/images/bnb.png"
-          fee_manager_address:
+          bridge_facade_address:
             type: string
             example: "0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d"
           swap_contract_address:
