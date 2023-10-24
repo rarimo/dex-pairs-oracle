@@ -30,6 +30,7 @@ shell:
     - export CGO_ENABLED=1
     - export GO111MODULE=on
     - export GOOS=linux
+    - cd /go/src/github.com/rarimo/dex-pairs-oracle
     - go build -o /usr/local/bin/dex-pairs-oracle /go/src/github.com/rarimo/dex-pairs-oracle
 
 ---
