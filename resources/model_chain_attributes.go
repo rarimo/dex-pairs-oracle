@@ -5,8 +5,9 @@
 package resources
 
 type ChainAttributes struct {
-	ExplorerUrl string `json:"explorer_url"`
-	Icon        string `json:"icon"`
+	BridgeFacadeAddress string `json:"bridge_facade_address"`
+	ExplorerUrl         string `json:"explorer_url"`
+	Icon                string `json:"icon"`
 	// The kind of the chain
 	Kind                ChainKind       `json:"kind"`
 	Name                string          `json:"name"`

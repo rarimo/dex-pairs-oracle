@@ -65,6 +65,7 @@ type Chain struct {
 	Type                           tokenmanager.NetworkType `fig:"type,required"`
 	Kind                           Kind                     `fig:"kind,required"`
 	IconURL                        string                   `fig:"icon_url,required"`
+	BridgeFacadeAddr               common.Address           `fig:"bridge_facade_address,required"`
 	SwapContractAddr               common.Address           `fig:"swap_contract_address,required"`
 	SwapContractVersion            SwapContractVersion      `fig:"swap_contract_version,required"`
 	MultiBalanceGetterContractAddr common.Address           `fig:"balance_multigetter_addr,required"`

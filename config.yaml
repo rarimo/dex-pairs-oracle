@@ -30,6 +30,7 @@ chains:
       type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
       kind: "mainnet"
       icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/eth-logo.png" # TODO all this URLs (unused in the service) should be hosted as a static json elsewhere
+      bridge_facade_address: ""
       swap_contract_address: "0x9b365BF9cF2d73Cb8e6C9ac1f8a740232D61a6A2"
       swap_contract_version: "UniswapV3"
       balance_multigetter_addr: "0x2a7d9123a99fb88c71deb730011a43f3e579ffdd"
@@ -53,6 +54,7 @@ chains:
       type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
       kind: "testnet"
       icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/eth-logo.png"
+      bridge_facade_address: "0xEe40dD092c0563Ab3F76dFe86340334caC5e04E9"
       swap_contract_address: "0xa10093a0D0970Fc1De02faF8e1884f414dC05Dbe"
       swap_contract_version: "UniswapV3"
       balance_multigetter_addr: "0xD48A9C5D936A78b7c766d956f9Ff7B541c8aEe7D"
@@ -75,6 +77,7 @@ chains:
       type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
       kind: "mainnet"
       icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/matic-logo.png"
+      bridge_facade_address: ""
       swap_contract_address: "0xa809168D07f6AEE4f0878Bfc5DC931A5612cFeb1"
       swap_contract_version: "QuickSwap"
       balance_multigetter_addr: "0x2a7d9123a99Fb88C71DEb730011a43F3E579FFdd"
@@ -97,6 +100,7 @@ chains:
       type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
       kind: "testnet"
       icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/avax-logo.png"
+      bridge_facade_address: ""
       swap_contract_address: "0xa809168D07f6AEE4f0878Bfc5DC931A5612cFeb1"
       swap_contract_version: "TraderJoe"
       balance_multigetter_addr: "0x2a7d9123a99Fb88C71DEb730011a43F3E579FFdd"
@@ -119,6 +123,7 @@ chains:
       type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
       kind: "testnet"
       icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/avax-logo.png"
+      bridge_facade_address: "0xd9B385BbB8159D8888A37fD122F069f2f65bb111"
       swap_contract_address: "0xad3C3F305FDcA1f2028d63000453a25ffFF4e289"
       swap_contract_version: "TraderJoe"
       balance_multigetter_addr: "0x2a7d9123a99fb88c71deb730011a43f3e579ffdd"
@@ -149,6 +154,7 @@ chains:
       type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
       kind: "mainnet"
       icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/bnb-logo.png"
+      bridge_facade_address: ""
       swap_contract_address: "0x1C4bc89d32bB4Ec19F9B54Ae457F249C2B133851"
       swap_contract_version: "PancakeSwap"
       balance_multigetter_addr: "0x2a7d9123a99Fb88C71DEb730011a43F3E579FFdd"
@@ -172,6 +178,7 @@ chains:
       type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
       kind: "testnet"
       icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/bnb-logo.png"
+      bridge_facade_address: "0x2b5d48Eb8aF060119a88763e8349C7Adc9C7C808"
       swap_contract_address: "0xcb62bBC9F6360276B2e326F27023e565D638967A"
       swap_contract_version: "PancakeSwap"
       balance_multigetter_addr: "0x2a7d9123a99fb88c71deb730011a43f3e579ffdd"

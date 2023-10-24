@@ -56,7 +56,7 @@ func (c Included) MarshalJSON() ([]byte, error) {
 	return json.Marshal(uniqueEntries)
 }
 
-// UmarshalJSON - unmarshal array of json objects into include collection
+// UnmarshalJSON - unmarshal array of json objects into include collection
 func (c *Included) UnmarshalJSON(data []byte) error {
 	var keys []Key
 	err := json.Unmarshal(data, &keys)
