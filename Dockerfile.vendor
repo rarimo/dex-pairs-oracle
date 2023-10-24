@@ -1,6 +1,6 @@
-FROM golang:1.19-alpine as buildbase
+FROM golang:1.20-alpine as buildbase
 
-WORKDIR /go/src/gitlab.com/rarimo/dex-pairs-oracle
+WORKDIR /go/src/github.com/rarimo/dex-pairs-oracle
 COPY vendor .
 COPY . .
 
@@ -8,7 +8,7 @@ ENV GO111MODULE="on"
 ENV CGO_ENABLED=0
 ENV GOOS="linux"
 
-RUN go build -o /usr/local/bin/dex-pairs-oracle gitlab.com/rarimo/dex-pairs-oracle
+RUN go build -o /usr/local/bin/dex-pairs-oracle github.com/rarimo/dex-pairs-oracle
 
 ###
 

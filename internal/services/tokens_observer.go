@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
+	"github.com/rarimo/dex-pairs-oracle/internal/chains"
 
+	"github.com/rarimo/dex-pairs-oracle/internal/config"
+	"github.com/rarimo/dex-pairs-oracle/internal/data"
+	"github.com/rarimo/dex-pairs-oracle/internal/pools"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/distributed_lab/running"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/pools"
 )
 
 func RunTokensObserver(ctx context.Context, cfg config.Config) {

@@ -13,7 +13,7 @@ import (
 
 	"github.com/Masterminds/squirrel"
 
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
+	"github.com/rarimo/dex-pairs-oracle/internal/data"
 )
 
 func (q BalanceQ) InsertBatchCtx(ctx context.Context, balances ...data.Balance) error {

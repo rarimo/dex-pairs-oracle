@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
-	tokenmanager "gitlab.com/rarimo/rarimo-core/x/tokenmanager/types"
+	tokenmanager "github.com/rarimo/rarimo-core/x/tokenmanager/types"
 )
 
 type SwapContractVersion string

@@ -7,11 +7,11 @@ import (
 
 	"github.com/go-chi/chi"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/rarimo/dex-pairs-oracle/internal/chains"
+	"github.com/rarimo/dex-pairs-oracle/resources"
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 	"gitlab.com/distributed_lab/logan/v3"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
-	"gitlab.com/rarimo/dex-pairs-oracle/resources"
 )
 
 type listSupportedTokensRequest struct {

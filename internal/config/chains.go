@@ -1,9 +1,9 @@
 package config
 
 import (
+	"github.com/rarimo/dex-pairs-oracle/internal/chains"
+	"github.com/rarimo/dex-pairs-oracle/pkg/ethamounts"
 	"gitlab.com/distributed_lab/logan/v3"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
-	"gitlab.com/rarimo/dex-pairs-oracle/pkg/ethamounts"
 
 	"gitlab.com/distributed_lab/figure/v3"
 	"gitlab.com/distributed_lab/kit/kv"

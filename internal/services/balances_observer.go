@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
+	"github.com/rarimo/dex-pairs-oracle/internal/chains"
 
-	"gitlab.com/rarimo/dex-pairs-oracle/pkg/ethamounts"
+	"github.com/rarimo/dex-pairs-oracle/pkg/ethamounts"
 
 	"github.com/ethereum/go-ethereum/ethclient"
 
@@ -22,9 +22,9 @@ import (
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/running"
 
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
+	"github.com/rarimo/dex-pairs-oracle/internal/data"
 
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
+	"github.com/rarimo/dex-pairs-oracle/internal/config"
 )
 
 func RunBalancesObserver(ctx context.Context, cfg config.Config) {

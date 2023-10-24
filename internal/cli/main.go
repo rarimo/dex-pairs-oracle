@@ -8,15 +8,15 @@ import (
 	"sync"
 	"syscall"
 
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/services"
+	"github.com/rarimo/dex-pairs-oracle/internal/services"
 
 	"gitlab.com/distributed_lab/logan/v3/errors"
 
 	"github.com/alecthomas/kingpin"
+	"github.com/rarimo/dex-pairs-oracle/internal/config"
+	"github.com/rarimo/dex-pairs-oracle/internal/services/api"
 	"gitlab.com/distributed_lab/kit/kv"
 	"gitlab.com/distributed_lab/logan/v3"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/services/api"
 )
 
 func Run(args []string) {

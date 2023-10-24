@@ -7,7 +7,7 @@ Backend module that loads DEX asset pairs from several configured sources and ex
 ## Install
 
   ```bash
-  git clone gitlab.com/rarimo/dex-pairs-oracle
+  git clone github.com/rarimo/dex-pairs-oracle
   cd dex-pairs-oracle
   go build main.go
   export KV_VIPER_FILE=./config.yaml
@@ -40,8 +40,8 @@ use `docker run ` with `-p 8080:80` to expose port 80 to 8080
 {%_ } _%}
 
     ```bash
-    docker build -t gitlab.com/rarimo/dex-pairs-oracle .
-    docker run -e KV_VIPER_FILE=/config.yaml gitlab.com/rarimo/dex-pairs-oracle
+    docker build -t github.com/rarimo/dex-pairs-oracle .
+    docker run -e KV_VIPER_FILE=/config.yaml github.com/rarimo/dex-pairs-oracle
     ```
 
 ## Running from Source
@@ -50,11 +50,9 @@ use `docker run ` with `-p 8080:80` to expose port 80 to 8080
 * Provide valid config file
 * Launch the service with `run service` command
 
-
-
-
-
 ## Contact
-
 Responsible hp
-The primary contact for this project is  iamhp0
+The primary contact for this project is iamhp0
+
+## License
+[MIT](./LICENSE)

@@ -3,8 +3,8 @@
 GENERATOR_IMAGE=registry.gitlab.com/tokend/openapi-go-generator:c59241b52b0e37bbbeb02a214ab5bfd07627aabc
 
 
-GENERATED="${GOPATH}/src/gitlab.com/rarimo/dex-pairs-oracle/resources"
-OPENAPI_DIR="${GOPATH}/src/gitlab.com/rarimo/dex-pairs-oracle/docs/web_deploy"
+GENERATED="${GOPATH}/src/github.com/rarimo/dex-pairs-oracle/resources"
+OPENAPI_DIR="${GOPATH}/src/github.com/rarimo/dex-pairs-oracle/docs/web_deploy"
 PACKAGE_NAME=resources
 
 function printHelp {

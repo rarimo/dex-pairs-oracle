@@ -1,16 +1,16 @@
 package config
 
 import (
+	"github.com/rarimo/dex-pairs-oracle/internal/chains"
+	"github.com/rarimo/dex-pairs-oracle/internal/data"
+	"github.com/rarimo/dex-pairs-oracle/internal/data/pg"
+	redisdata "github.com/rarimo/dex-pairs-oracle/internal/data/redis"
+	"github.com/rarimo/dex-pairs-oracle/pkg/rd"
 	"gitlab.com/distributed_lab/kit/comfig"
 	"gitlab.com/distributed_lab/kit/copus"
 	"gitlab.com/distributed_lab/kit/copus/types"
 	"gitlab.com/distributed_lab/kit/kv"
 	"gitlab.com/distributed_lab/kit/pgdb"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/data/pg"
-	redisdata "gitlab.com/rarimo/dex-pairs-oracle/internal/data/redis"
-	"gitlab.com/rarimo/dex-pairs-oracle/pkg/rd"
 )
 
 type Config interface {
