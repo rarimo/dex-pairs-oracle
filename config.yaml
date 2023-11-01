@@ -13,11 +13,11 @@ redis:
   db: 0
 
 tokens_observer:
-  interval: 5s
+  interval: 24h
 
 balances_observer:
-  interval: 5s
-  page_size: 100
+  interval: 45s
+  page_size: 1500
 
 chains:
   list:
@@ -29,7 +29,7 @@ chains:
       explorer_url: "https://etherscan.io"
       type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
       kind: "mainnet"
-      icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/eth-logo.png" # TODO all this URLs (unused in the service) should be hosted as a static json elsewhere
+      icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/eth-logo.png"
       swap_contract_address: "0x9b365BF9cF2d73Cb8e6C9ac1f8a740232D61a6A2"
       swap_contract_version: "UniswapV3"
       tokens_info:
@@ -62,27 +62,13 @@ chains:
             decimals: 18
             logo_uri: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/eth-logo.png"
             native: true
+          - address: "0x07865c6e87b9f70255377e024ace6630c1eaa37f"
+            name: "USD Coin"
+            symbol: "USDC"
+            decimals: 6
+            logo_uri: "https://raw.githubusercontent.com/traderjoe-xyz/joe-tokenlists/main/logos/0xB6076C93701D6a07266c31066B298AeC6dd65c2d/logo.png"
         list_urls:
           - "https://ipfs.testnet.rarimo.com/ipfs/ipns/tokens.uniswap.org"
-    - id: 11155111
-      name: "Sepolia"
-      rpc_url_client: "https://sepolia.infura.io/v3/"
-      rpc_url: "https://sepolia.infura.io/v3/<apikey>"
-      native_symbol: ETH
-      explorer_url: "https://sepolia.etherscan.io"
-      type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
-      kind: "testnet"
-      icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/eth-logo.png"
-      swap_contract_address: "0x0000000000000000000000000000000000000000"
-      swap_contract_version: "UniswapV3"
-      tokens_info:
-        tokens:
-          - address: "0x0000000000000000000000000000000000000000"
-            name: "Sepolia Ethereum"
-            symbol: "ETH"
-            decimals: 18
-            logo_uri: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/eth-logo.png"
-            native: true
     - id: 137
       name: "Polygon"
       rpc_url_client: "https://polygon-rpc.com/"
@@ -104,27 +90,27 @@ chains:
             native: true
         list_urls:
           - "https://unpkg.com/quickswap-default-token-list@1.2.78/build/quickswap-default.tokenlist.json"
-    - id: 80001
-      name: "Mumbai"
-      rpc_url_client: "https://rpc-mumbai.maticvigil.com/"
-      rpc_url: "https://rpc-mumbai.maticvigil.com/"
-      native_symbol: MATIC
-      explorer_url: "https://mumbai.polygonscan.com"
-      type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
-      kind: "testnet"
-      icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/matic-logo.png"
-      swap_contract_address: "0x24Ae0B9DC81d2E4e9383e283163913BF200a579F"
-      swap_contract_version: "QuickSwap"
-      tokens_info:
-        tokens:
-          - address: "0x0000000000000000000000000000000000000000"
-            name: "Polygon Mumbai Matic"
-            symbol: "MATIC"
-            decimals: 18
-            logo_uri: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/matic-logo.png"
-            native: true
-        list_urls:
-          - "https://unpkg.com/quickswap-default-token-list@1.2.78/build/quickswap-default.tokenlist.json"
+#    - id: 80001 # TODO: MUMBAI QUICKSWAP UNISWAP ROUTER BROKEN
+#      name: "Mumbai"
+#      rpc_url_client: "https://rpc-mumbai.maticvigil.com/"
+#      rpc_url: "https://rpc-mumbai.maticvigil.com/"
+#      native_symbol: MATIC
+#      explorer_url: "https://mumbai.polygonscan.com"
+#      type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
+#      kind: "testnet"
+#      icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/matic-logo.png"
+#      swap_contract_address: "0x24Ae0B9DC81d2E4e9383e283163913BF200a579F"
+#      swap_contract_version: "QuickSwap"
+#      tokens_info:
+#        tokens:
+#          - address: "0x0000000000000000000000000000000000000000"
+#            name: "Polygon Mumbai Matic"
+#            symbol: "MATIC"
+#            decimals: 18
+#            logo_uri: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/matic-logo.png"
+#            native: true
+#        list_urls:
+#          - "https://unpkg.com/quickswap-default-token-list@1.2.78/build/quickswap-default.tokenlist.json"
     - id: 43114
       name: "Avalanche"
       rpc_url_client: "https://api.avax.network/ext/bc/C/rpc"
@@ -155,7 +141,7 @@ chains:
       type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
       kind: "testnet"
       icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/avax-logo.png"
-      swap_contract_address: "0xad3C3F305FDcA1f2028d63000453a25ffFF4e289"
+      swap_contract_address: "0xFE634aBe3950534B24bBA247aE04ABD9cBCAD90D"
       swap_contract_version: "TraderJoe"
       tokens_info:
         tokens:
