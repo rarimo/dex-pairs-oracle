@@ -169,7 +169,7 @@ chains:
           - "https://tokens.pancakeswap.finance/pancakeswap-extended.json"
           - "https://raw.githubusercontent.com/pancakeswap/token-list/main/lists/cmc.json"
     - id: 97
-      name: "Binance Smart Chain Testnet"
+      name: "bsc_testnet"
       rpc_url_client: "https://data-seed-prebsc-1-s1.binance.org:8545/"
       rpc_url: "https://data-seed-prebsc-1-s1.binance.org:8545/"
       native_symbol: tBNB

@@ -1,0 +1,43 @@
+version: "3.7"
+
+services:
+  dex-pairs-oracle:
+    image: dex-pairs-oracle:latest
+    restart: on-failure
+    depends_on:
+      - dex-pairs-oracle-db
+      - redis
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./config.local.yaml:/config.yaml
+    environment:
+      - KV_VIPER_FILE=/config.yaml
+    entrypoint: sh -c "dex-pairs-oracle migrate up && dex-pairs-oracle run all"
+
+  redis:
+    image: redis:5.0-alpine
+    restart: unless-stopped
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+
+  dex-pairs-oracle-db:
+    image: postgres:13
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=dex-pairs-oracle
+      - POSTGRES_PASSWORD=dex-pairs-oracle
+      - POSTGRES_DB=dex-pairs-oracle
+      - PGDATA=/pgdata
+    volumes:
+      - dex-pairs-oracle-data:/pgdata
+
+volumes:
+  redis-data:
+  dex-pairs-oracle-data:
