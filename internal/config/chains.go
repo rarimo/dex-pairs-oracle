@@ -2,10 +2,11 @@ package config
 
 import (
 	"github.com/rarimo/dex-pairs-oracle/internal/chains"
-	"github.com/rarimo/dex-pairs-oracle/pkg/ethamounts"
+	"gitlab.com/distributed_lab/figure/v3"
 	"gitlab.com/distributed_lab/logan/v3"
 
-	"gitlab.com/distributed_lab/figure/v3"
+	"github.com/ethereum/go-ethereum/ethclient"
+	ethamountsbind "github.com/rarimo/dex-pairs-oracle/pkg/ethamounts/bind"
 	"gitlab.com/distributed_lab/kit/kv"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 )
@@ -30,7 +31,14 @@ func (c *config) ChainsCfg() *chains.Config {
 		}
 
 		for i := 0; i < len(cfg.Chains); i++ {
-			cfg.Chains[i].BalanceProvider, err = ethamounts.NewMultiProvider(cfg.Chains[i].RPCUrl)
+			chainEthClient, err := ethclient.Dial(cfg.Chains[i].RPCUrl.String())
+			if err != nil {
+				panic(errors.Wrap(err, "failed to dial rpc", logan.F{
+					"chain": cfg.Chains[i].Name,
+				}))
+			}
+
+			cfg.Chains[i].BalanceProvider, err = ethamountsbind.NewMultiBalanceGetter(cfg.Chains[i].MultiBalanceGetterContractAddr, chainEthClient)
 			if err != nil {
 				panic(errors.Wrap(err, "failed to create balance provider", logan.F{
 					"chain": cfg.Chains[i].Name,

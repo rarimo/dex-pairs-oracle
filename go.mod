@@ -9,7 +9,6 @@ require (
 	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/go-ozzo/ozzo-validation/v4 v4.2.1
 	github.com/go-redis/redis/v8 v8.11.5
-	github.com/mitchellh/mapstructure v1.5.0
 	github.com/rarimo/rarimo-core v1.0.7-0.20231015135728-36de84c73c67
 	github.com/rubenv/sql-migrate v1.4.0
 	github.com/spf13/cast v1.5.1
@@ -98,6 +97,7 @@ require (
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mimoo/StrobeGo v0.0.0-20210601165009-122bf33a46e0 // indirect
+	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect

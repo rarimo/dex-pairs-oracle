@@ -58,9 +58,9 @@ func newListEvmBalancesAddress(r *http.Request) (*listBalancesRequest, error) {
 		return nil, err
 	}
 
-	if req.PageLimit < 1 || req.PageLimit > 100 {
+	if req.PageLimit < 1 || req.PageLimit > 500 {
 		return nil, validation.Errors{
-			"page[limit]": errors.New("should be in the range [1; 100]"),
+			"page[limit]": errors.New("should be in the range [1; 500]"),
 		}
 	}
 

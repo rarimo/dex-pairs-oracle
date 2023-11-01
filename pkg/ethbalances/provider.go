@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rarimo/dex-pairs-oracle/internal/chains"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -43,7 +44,7 @@ func (p *Provider) GetBalances(ctx context.Context, address string, tokens []cha
 		tokenAddrs[i] = common.HexToAddress(t.Address)
 	}
 
-	block, amounts, err := p.chain.BalanceProvider.Amounts(ctx, accountAddr, tokenAddrs)
+	block, amounts, err := p.chain.BalanceProvider.GetMultipleBalances(&bind.CallOpts{Context: ctx}, tokenAddrs, accountAddr)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get amounts", logan.F{
 			"address": address,

@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/rarimo/dex-pairs-oracle/internal/chains"
 
 	"github.com/rarimo/dex-pairs-oracle/pkg/ethamounts"
@@ -109,7 +110,7 @@ func (b balancesObserver) runOnce(ctx context.Context) error {
 
 		updatedBalances := make([]data.Balance, 0, len(balances))
 		for addr, tokens := range accountTokens {
-			block, amounts, err := b.chain.BalanceProvider.Amounts(ctx, addr, tokens)
+			block, amounts, err := b.chain.BalanceProvider.GetMultipleBalances(&bind.CallOpts{Context: ctx}, tokens, addr)
 			if err != nil {
 				return false, errors.Wrap(err, "failed to fetch amounts")
 			}
