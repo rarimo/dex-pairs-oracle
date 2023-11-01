@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/rarimo/dex-pairs-oracle/internal/config"
+	"github.com/rarimo/dex-pairs-oracle/internal/data"
 	"gitlab.com/distributed_lab/logan/v3"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
 )
 
 type ctxKey int

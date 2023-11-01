@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/rarimo/dex-pairs-oracle/internal/data"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
 
 	"github.com/go-redis/redis/v8"
 )

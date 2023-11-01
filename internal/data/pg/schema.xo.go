@@ -9,7 +9,7 @@ import (
 
 	"gitlab.com/distributed_lab/kit/pgdb"
 	"gitlab.com/distributed_lab/logan/v3/errors"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
+	"github.com/rarimo/dex-pairs-oracle/internal/data"
 )
 
 // Storage is the helper struct for database operations

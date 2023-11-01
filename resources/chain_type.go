@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"strconv"
 
+	"github.com/rarimo/rarimo-core/x/tokenmanager/types"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
-	"gitlab.com/rarimo/rarimo-core/x/tokenmanager/types"
 )
 
 type ChainType types.NetworkType

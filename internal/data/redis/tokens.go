@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
+	"github.com/rarimo/dex-pairs-oracle/internal/chains"
 
 	"github.com/go-redis/redis/v8"
 	"gitlab.com/distributed_lab/logan/v3"

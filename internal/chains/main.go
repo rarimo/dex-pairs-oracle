@@ -8,7 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 
 	"github.com/ethereum/go-ethereum/common"
-	tokenmanager "gitlab.com/rarimo/rarimo-core/x/tokenmanager/types"
+	tokenmanager "github.com/rarimo/rarimo-core/x/tokenmanager/types"
 )
 
 type SwapContractVersion string

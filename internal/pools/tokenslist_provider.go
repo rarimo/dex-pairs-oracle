@@ -7,14 +7,14 @@ import (
 	"net/http"
 	"time"
 
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
+	"github.com/rarimo/dex-pairs-oracle/internal/chains"
 
+	"github.com/rarimo/dex-pairs-oracle/internal/config"
+	"github.com/rarimo/dex-pairs-oracle/internal/data"
+	redisdata "github.com/rarimo/dex-pairs-oracle/internal/data/redis"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/distributed_lab/running"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
-	redisdata "gitlab.com/rarimo/dex-pairs-oracle/internal/data/redis"
 )
 
 type TokensListProvider struct {

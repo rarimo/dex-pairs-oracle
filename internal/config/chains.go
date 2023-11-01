@@ -1,13 +1,14 @@
 package config
 
 import (
-	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/rarimo/dex-pairs-oracle/internal/chains"
 	"gitlab.com/distributed_lab/figure/v3"
-	"gitlab.com/distributed_lab/kit/kv"
 	"gitlab.com/distributed_lab/logan/v3"
+
+	"github.com/ethereum/go-ethereum/ethclient"
+	ethamountsbind "github.com/rarimo/dex-pairs-oracle/pkg/ethamounts/bind"
+	"gitlab.com/distributed_lab/kit/kv"
 	"gitlab.com/distributed_lab/logan/v3/errors"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
-	ethamountsbind "gitlab.com/rarimo/dex-pairs-oracle/pkg/ethamounts/bind"
 )
 
 func (c *config) ChainsCfg() *chains.Config {

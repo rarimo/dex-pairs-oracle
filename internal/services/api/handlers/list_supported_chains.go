@@ -7,12 +7,12 @@ import (
 	"strconv"
 
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/rarimo/dex-pairs-oracle/internal/chains"
+	"github.com/rarimo/dex-pairs-oracle/resources"
+	tokenmanager "github.com/rarimo/rarimo-core/x/tokenmanager/types"
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 	"gitlab.com/distributed_lab/urlval"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
-	"gitlab.com/rarimo/dex-pairs-oracle/resources"
-	tokenmanager "gitlab.com/rarimo/rarimo-core/x/tokenmanager/types"
 )
 
 type listSupportedChainRequest struct {

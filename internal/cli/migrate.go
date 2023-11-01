@@ -1,10 +1,10 @@
 package cli
 
 import (
+	"github.com/rarimo/dex-pairs-oracle/internal/assets"
+	"github.com/rarimo/dex-pairs-oracle/internal/config"
 	migrate "github.com/rubenv/sql-migrate"
 	"gitlab.com/distributed_lab/logan/v3/errors"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/assets"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
 )
 
 var migrations = &migrate.EmbedFileSystemMigrationSource{

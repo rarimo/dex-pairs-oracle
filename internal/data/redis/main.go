@@ -2,7 +2,7 @@ package redis
 
 import (
 	"github.com/go-redis/redis/v8"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
+	"github.com/rarimo/dex-pairs-oracle/internal/data"
 )
 
 type Store struct {

@@ -1,8 +1,8 @@
 package pools
 
 import (
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
+	"github.com/rarimo/dex-pairs-oracle/internal/chains"
+	"github.com/rarimo/dex-pairs-oracle/internal/data"
 )
 
 type VersionedTokenList struct {

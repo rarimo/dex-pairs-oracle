@@ -4,15 +4,15 @@ import (
 	"context"
 	"math/big"
 
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
+	"github.com/rarimo/dex-pairs-oracle/internal/chains"
 
 	abibind "github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/rarimo/dex-pairs-oracle/pkg/ethamounts/bind"
+	"github.com/rarimo/dex-pairs-oracle/pkg/etherrors"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
-	"gitlab.com/rarimo/dex-pairs-oracle/pkg/ethamounts/bind"
-	"gitlab.com/rarimo/dex-pairs-oracle/pkg/etherrors"
 )
 
 type Provider struct {

@@ -5,13 +5,12 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
-
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
+	"github.com/rarimo/dex-pairs-oracle/internal/chains"
 
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/rarimo/dex-pairs-oracle/internal/data"
 	"gitlab.com/distributed_lab/logan"
 	"gitlab.com/distributed_lab/logan/v3/errors"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
 )
 
 type Provider struct {

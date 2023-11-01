@@ -5,9 +5,9 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
+	"github.com/rarimo/dex-pairs-oracle/internal/config"
+	"github.com/rarimo/dex-pairs-oracle/internal/services/api/handlers"
 	"gitlab.com/distributed_lab/ape"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/config"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/services/api/handlers"
 )
 
 func Run(ctx context.Context, cfg config.Config) {

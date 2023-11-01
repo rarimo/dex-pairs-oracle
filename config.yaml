@@ -13,11 +13,11 @@ redis:
   db: 0
 
 tokens_observer:
-  interval: 5s
+  interval: 24h
 
 balances_observer:
-  interval: 5s
-  page_size: 100
+  interval: 45s
+  page_size: 1500
 
 chains:
   list:
@@ -29,7 +29,7 @@ chains:
       explorer_url: "https://etherscan.io"
       type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
       kind: "mainnet"
-      icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/eth-logo.png" # TODO all this URLs (unused in the service) should be hosted as a static json elsewhere
+      icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/eth-logo.png"
       swap_contract_address: "0x9b365BF9cF2d73Cb8e6C9ac1f8a740232D61a6A2"
       swap_contract_version: "UniswapV3"
       balance_multigetter_addr: "0x2a7d9123a99fb88c71deb730011a43f3e579ffdd"
@@ -64,6 +64,11 @@ chains:
             decimals: 18
             logo_uri: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/eth-logo.png"
             native: true
+          - address: "0x07865c6e87b9f70255377e024ace6630c1eaa37f"
+            name: "USD Coin"
+            symbol: "USDC"
+            decimals: 6
+            logo_uri: "https://raw.githubusercontent.com/traderjoe-xyz/joe-tokenlists/main/logos/0xB6076C93701D6a07266c31066B298AeC6dd65c2d/logo.png"
         list_urls:
           - "https://ipfs.testnet.rarimo.com/ipfs/ipns/tokens.uniswap.org"
     - id: 137
@@ -119,7 +124,7 @@ chains:
       type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
       kind: "testnet"
       icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/avax-logo.png"
-      swap_contract_address: "0xad3C3F305FDcA1f2028d63000453a25ffFF4e289"
+      swap_contract_address: "0xFE634aBe3950534B24bBA247aE04ABD9cBCAD90D"
       swap_contract_version: "TraderJoe"
       balance_multigetter_addr: "0x2a7d9123a99fb88c71deb730011a43f3e579ffdd"
       tokens_info:

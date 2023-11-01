@@ -8,21 +8,21 @@ import (
 	"strconv"
 	"time"
 
-	"gitlab.com/rarimo/dex-pairs-oracle/pkg/ethbalances"
+	"github.com/rarimo/dex-pairs-oracle/pkg/ethbalances"
 
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/go-chi/chi"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/rarimo/dex-pairs-oracle/internal/chains"
+	"github.com/rarimo/dex-pairs-oracle/internal/data"
+	"github.com/rarimo/dex-pairs-oracle/pkg/etherrors"
+	"github.com/rarimo/dex-pairs-oracle/resources"
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 	"gitlab.com/distributed_lab/kit/pgdb"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
 	"gitlab.com/distributed_lab/urlval"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/chains"
-	"gitlab.com/rarimo/dex-pairs-oracle/internal/data"
-	"gitlab.com/rarimo/dex-pairs-oracle/pkg/etherrors"
-	"gitlab.com/rarimo/dex-pairs-oracle/resources"
 )
 
 type listBalancesRequest struct {
