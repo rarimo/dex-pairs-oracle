@@ -100,7 +100,7 @@ chains:
       native_symbol: AVAX
       explorer_url: "https://snowtrace.io"
       type: 0 # 0 = EVM, 1 = Solana, 2 = Near, 3 = Other
-      kind: "testnet"
+      kind: "mainnet"
       icon_url: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/avax-logo.png"
       swap_contract_address: "0xa809168D07f6AEE4f0878Bfc5DC931A5612cFeb1"
       swap_contract_version: "TraderJoe"
