@@ -68,7 +68,7 @@ chains:
             name: "USD Coin"
             symbol: "USDC"
             decimals: 6
-            logo_uri: "https://raw.githubusercontent.com/traderjoe-xyz/joe-tokenlists/main/logos/0xB6076C93701D6a07266c31066B298AeC6dd65c2d/logo.png"
+            logo_uri: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/usdc-logo.png"
         list_urls:
           - "https://ipfs.testnet.rarimo.com/ipfs/ipns/tokens.uniswap.org"
     - id: 137
@@ -139,12 +139,12 @@ chains:
             name: "Wrapped AVAX"
             symbol: "WAVAX"
             decimals: 18
-            logo_uri: "https://raw.githubusercontent.com/traderjoe-xyz/joe-tokenlists/main/logos/0xd00ae08403B9bbb9124bB305C09058E32C39A48c/logo.png"
+            logo_uri: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/wavax-logo.png"
           - address: "0xB6076C93701D6a07266c31066B298AeC6dd65c2d"
             name: "USD Coin"
             symbol: "USDC"
             decimals: 6
-            logo_uri: "https://raw.githubusercontent.com/traderjoe-xyz/joe-tokenlists/main/logos/0xB6076C93701D6a07266c31066B298AeC6dd65c2d/logo.png"
+            logo_uri: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/usdc-logo.png"
     - id: 56
       name: "BSC"
       rpc_url_client: "https://bsc-dataseed.binance.org/"
@@ -202,14 +202,14 @@ chains:
             name: "USDCoin"
             symbol: "USDC"
             decimals: 18
-            logo_uri: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png"
+            logo_uri: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/usdc-logo.png"
           - address: "0x337610d27c682E347C9cD60BD4b3b107C9d34dDd"
             name: "Tether USD"
             symbol: "USDT"
             decimals: 18
-            logo_uri: "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png"
+            logo_uri: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/usdt-logo.png"
           - address: "0x29a751263Aa7fD3E7728F2A2c9136007A2d61Ac1"
             name: "USDC Rarimo"
             symbol: "USDC"
             decimals: 6
-            logo_uri: "https://raw.githubusercontent.com/traderjoe-xyz/joe-tokenlists/main/logos/0xB6076C93701D6a07266c31066B298AeC6dd65c2d/logo.png"
+            logo_uri: "https://raw.githubusercontent.com/rarimo/js-sdk/1.5.0/assets/logos/usdc-logo.png"
